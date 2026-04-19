@@ -60,7 +60,7 @@ function Cronometro({ segundos, onTerminar }) {
   )
 }
 
-function FilaSerie({ numSerie, unidad, onCompletar, completada, descansoSegundos }) {
+function FilaSerie({ numSerie, unidad, onCompletar, completada, descansoSegundos, datosPrevios }) {
   const [peso, setPeso] = useState('')
   const [reps, setReps] = useState('')
   const [mostraCrono, setMostraCrono] = useState(false)
@@ -111,14 +111,31 @@ function FilaSerie({ numSerie, unidad, onCompletar, completada, descansoSegundos
         </div>
 
         {!completada && (
-          <button
-            onClick={handleCompletar}
-            disabled={!peso || !reps}
-            className="w-9 h-9 rounded-full flex items-center justify-center text-base flex-shrink-0 active:scale-95 transition-transform disabled:opacity-20"
-            style={{ background: '#14532D', color: '#22C55E', border: '1px solid #166534' }}
-          >
-            ✓
-          </button>
+          <div className="flex flex-col gap-1 flex-shrink-0">
+            {datosPrevios && (
+              <button
+                onClick={() => {
+                  setPeso(unidad === 'lbs'
+                    ? parseFloat((datosPrevios.peso_kg * 2.20462).toFixed(1))
+                    : datosPrevios.peso_kg)
+                  setReps(datosPrevios.repeticiones)
+                }}
+                className="w-9 h-9 rounded-full flex items-center justify-center text-xs flex-shrink-0 active:scale-95 transition-transform"
+                style={{ background: '#1e3a5f', color: '#60a5fa', border: '1px solid #2563eb' }}
+                title="Repetir serie anterior"
+              >
+                ↺
+              </button>
+            )}
+            <button
+              onClick={handleCompletar}
+              disabled={!peso || !reps}
+              className="w-9 h-9 rounded-full flex items-center justify-center text-base flex-shrink-0 active:scale-95 transition-transform disabled:opacity-20"
+              style={{ background: '#14532D', color: '#22C55E', border: '1px solid #166534' }}
+            >
+              ✓
+            </button>
+          </div>
         )}
       </div>
 
@@ -204,6 +221,7 @@ function TarjetaEjercicio({ ejercicio, unidad, onSeriesCompletas }) {
             completada={i < series.length}
             onCompletar={handleCompletar}
             descansoSegundos={ejercicioActual.descanso_segundos}
+            datosPrevios={i > 0 && series[i - 1] ? series[i - 1] : null}
           />
         ))}
       </div>
