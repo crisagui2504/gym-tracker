@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { obtenerRacha } from '../services/storage'
+import { useState, useEffect } from 'react'
+import { getRachaServidor } from '../services/api'
 
 const RUTINAS = [
   { id: 1, nombre: 'Push', dia: 1, tipo: 'push' },
@@ -35,7 +35,13 @@ const ESTILOS = {
 }
 
 export default function SeleccionRutina({ onSeleccionar, onDashboard }) {
-  const [racha] = useState(obtenerRacha)
+  const [racha, setRacha] = useState({ dias: 0, ultimaFecha: null })
+
+  useEffect(() => {
+    getRachaServidor().then(data => {
+      if (data) setRacha(data)
+    })
+  }, [])
 
   const hoy = new Date().toLocaleDateString('es-MX', {
     weekday: 'long', day: 'numeric', month: 'long'

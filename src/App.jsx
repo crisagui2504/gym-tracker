@@ -2,8 +2,8 @@ import { useState } from 'react'
 import SeleccionRutina from './pages/SeleccionRutina'
 import Entrenamiento from './pages/Entrenamiento'
 import Dashboard from './pages/Dashboard'
-import { guardarLocal, limpiarLocal, actualizarRacha } from './services/storage'
-import { guardarEntrenamiento } from './services/api'
+import { guardarLocal, limpiarLocal } from './services/storage'
+import { guardarEntrenamiento, actualizarRachaServidor } from './services/api'
 
 function App() {
   const [pantalla, setPantalla] = useState('seleccion')
@@ -15,7 +15,7 @@ function App() {
   }
 
   const handleFinalizar = async (seriesGuardadas) => {
-    actualizarRacha()
+    await actualizarRachaServidor()
     const resultado = await guardarEntrenamiento(rutinaActiva.id, seriesGuardadas)
     if (resultado.offline) {
       guardarLocal({ rutina_id: rutinaActiva.id, series: seriesGuardadas })

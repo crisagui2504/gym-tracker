@@ -37,3 +37,23 @@ export async function getEstadisticas(ejercicioId) {
   if (!res.ok) throw new Error('Error al obtener estadísticas')
   return res.json()
 }
+
+export async function getRachaServidor() {
+  try {
+    const res = await fetch(`${BASE_URL}/obtener_racha.php`)
+    if (!res.ok) throw new Error()
+    return await res.json()
+  } catch {
+    return null
+  }
+}
+
+export async function actualizarRachaServidor() {
+  try {
+    const res = await fetch(`${BASE_URL}/actualizar_racha.php`, { method: 'POST' })
+    if (!res.ok) throw new Error()
+    return await res.json()
+  } catch {
+    return null
+  }
+}
