@@ -1,4 +1,4 @@
-const BASE_URL = '/api'
+const BASE_URL = 'http://20.172.67.68/api'
 const USAR_DATOS_LOCALES = true
 
 import { RUTINAS_LOCALES } from './rutinasLocales'
