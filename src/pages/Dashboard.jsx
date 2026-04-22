@@ -16,9 +16,9 @@ export default function Dashboard({ onVolver }) {
   const lista = Object.values(records)
 
   return (
-    <div className="min-h-screen px-4 py-5 sm:px-6">
+    <div className="min-h-screen px-3 py-4 sm:px-6">
       <div className="relative z-10 mx-auto w-full max-w-3xl">
-        <div className="panel rounded-3xl px-5 py-6 sm:px-6">
+        <div className="panel rounded-3xl px-4 py-5 sm:px-6">
           <div className="mb-5 flex items-center justify-between gap-2 border-b border-white/8 pb-4">
             <button onClick={onVolver} className="btn-secondary rounded-xl px-3 py-2 text-xs">
               Volver
@@ -38,12 +38,12 @@ export default function Dashboard({ onVolver }) {
                 <span className="chip">{lista.length} ejercicios</span>
               </div>
 
-              <div className="mb-5 grid gap-3 sm:grid-cols-2">
+              <div className="mb-5 grid gap-2.5 sm:grid-cols-2 sm:gap-3">
                 {lista.map((record) => (
                   <button
                     key={record.ejercicio_id}
                     onClick={() => setSeleccionado(record)}
-                    className={`rounded-2xl border p-4 text-left transition duration-200 hover:-translate-y-0.5 active:scale-95 ${
+                    className={`hover-lift rounded-2xl border p-3.5 text-left transition duration-200 active:scale-95 sm:p-4 ${
                       seleccionado?.ejercicio_id === record.ejercicio_id
                         ? 'border-emerald-300/50 bg-emerald-400/10'
                         : 'border-sky-300/20 bg-slate-900/45'
@@ -62,7 +62,7 @@ export default function Dashboard({ onVolver }) {
               {seleccionado && (
                 <div className="panel-strong rounded-2xl p-4">
                   <p className="section-label mb-3">Evolucion - {seleccionado.nombre}</p>
-                  <ResponsiveContainer width="100%" height={220}>
+                  <ResponsiveContainer width="100%" height={190}>
                     <LineChart
                       data={[
                         { fecha: 'Inicio', peso: 0 },

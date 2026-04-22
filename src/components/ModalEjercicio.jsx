@@ -6,9 +6,9 @@ export default function ModalEjercicio({ ejercicio, onCerrar, onAlternar }) {
   const alternativas = alternativasIds.map((id) => TODOS_EJERCICIOS[id]).filter(Boolean)
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-[rgba(2,10,20,0.8)] p-2 sm:items-center" onClick={onCerrar}>
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-[rgba(2,10,20,0.8)] px-2 pb-[calc(env(safe-area-inset-bottom)+0.5rem)] pt-2 sm:items-center" onClick={onCerrar}>
       <div
-        className="panel w-full max-w-md rounded-3xl p-5 sm:p-6"
+        className="panel max-h-[84dvh] w-full max-w-md overflow-y-auto rounded-3xl p-4 sm:max-h-[88dvh] sm:p-6"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mb-4 flex items-center justify-between">
@@ -16,7 +16,7 @@ export default function ModalEjercicio({ ejercicio, onCerrar, onAlternar }) {
             <h3 className="text-lg font-extrabold leading-tight">{ejercicio.nombre}</h3>
             <span className="chip mt-1 inline-block">{ejercicio.grupo_muscular}</span>
           </div>
-          <button onClick={onCerrar} className="btn-secondary h-8 w-8 rounded-full text-sm">
+          <button onClick={onCerrar} className="btn-secondary h-10 w-10 rounded-full text-sm">
             X
           </button>
         </div>

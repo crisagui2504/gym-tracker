@@ -21,6 +21,12 @@
   box-sizing: border-box;
 }
 
+*,
+*::before,
+*::after {
+  -webkit-tap-highlight-color: transparent;
+}
+
 html,
 body,
 #root {
@@ -42,6 +48,8 @@ body {
   margin: 0;
   color: var(--text-main);
   font-family: 'Sora', 'Trebuchet MS', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
   background:
     radial-gradient(1200px 600px at -15% -20%, rgba(88, 129, 255, 0.26), transparent 60%),
     radial-gradient(900px 520px at 120% 5%, rgba(36, 229, 185, 0.2), transparent 58%),
@@ -120,6 +128,7 @@ body {
   background: linear-gradient(130deg, rgba(32, 191, 149, 0.28), rgba(31, 155, 255, 0.3));
   color: #cbffee;
   font-weight: 700;
+  min-height: 44px;
 }
 
 .btn-secondary {
@@ -127,6 +136,7 @@ body {
   background: rgba(17, 36, 64, 0.95);
   color: #d2def6;
   font-weight: 700;
+  min-height: 44px;
 }
 
 .field-input {
@@ -134,7 +144,7 @@ body {
   border: none;
   background: transparent;
   color: #f4f7ff;
-  font-size: 1.22rem;
+  font-size: 16px;
   font-weight: 800;
   text-align: center;
   outline: none;
@@ -146,6 +156,12 @@ body {
 
 .mono {
   font-family: 'IBM Plex Mono', 'Consolas', monospace;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .hover-lift:hover {
+    transform: translateY(-2px);
+  }
 }
 
 @keyframes drift {

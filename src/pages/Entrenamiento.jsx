@@ -120,7 +120,7 @@ function FilaSerie({ numSerie, unidad, onCompletar, completada, descansoSegundos
                   setPeso(unidad === 'lbs' ? parseFloat((datosPrevios.peso_kg * 2.20462).toFixed(1)) : datosPrevios.peso_kg)
                   setReps(datosPrevios.repeticiones)
                 }}
-                className="h-9 w-9 rounded-full border border-sky-300/40 bg-sky-400/10 text-xs text-sky-100 transition hover:bg-sky-400/20 active:scale-95"
+                className="h-11 w-11 rounded-full border border-sky-300/40 bg-sky-400/10 text-xs text-sky-100 transition active:scale-95"
                 title="Repetir serie anterior"
               >
                 REP
@@ -129,7 +129,7 @@ function FilaSerie({ numSerie, unidad, onCompletar, completada, descansoSegundos
             <button
               onClick={handleCompletar}
               disabled={!peso || !reps}
-              className="h-9 w-9 rounded-full border border-emerald-300/60 bg-emerald-400/15 text-xs font-bold text-emerald-100 transition hover:bg-emerald-400/25 active:scale-95 disabled:opacity-25"
+              className="h-11 w-11 rounded-full border border-emerald-300/60 bg-emerald-400/15 text-xs font-bold text-emerald-100 transition active:scale-95 disabled:opacity-25"
             >
               OK
             </button>
@@ -265,10 +265,10 @@ export default function Entrenamiento({ rutina, onVolver, onFinalizar }) {
   const porcentaje = totalEjercicios > 0 ? (completados / totalEjercicios) * 100 : 0
 
   return (
-    <div className="min-h-screen px-4 py-5 sm:px-6">
+    <div className="min-h-screen px-3 py-4 sm:px-6">
       <div className="relative z-10 mx-auto w-full max-w-3xl">
         <div className="panel rounded-3xl pb-2">
-          <div className="sticky top-0 z-10 rounded-t-3xl border-b border-white/8 bg-[rgba(8,18,34,0.93)] px-5 pb-4 pt-5 backdrop-blur">
+          <div className="sticky top-[env(safe-area-inset-top)] z-10 rounded-t-3xl border-b border-white/8 bg-[rgba(8,18,34,0.94)] px-4 pb-4 pt-4 backdrop-blur sm:px-5 sm:pt-5">
             <div className="mb-3 flex items-center justify-between">
               <button onClick={onVolver} className="btn-secondary rounded-xl px-3 py-2 text-xs">
                 Volver
@@ -294,7 +294,7 @@ export default function Entrenamiento({ rutina, onVolver, onFinalizar }) {
             </div>
           </div>
 
-          <div className="px-5 py-4">
+          <div className="px-4 py-4 sm:px-5">
             {cargando ? (
               <div className="py-20 text-center text-sm text-[var(--text-soft)]">Cargando rutina...</div>
             ) : ejercicios.length === 0 ? (
@@ -306,12 +306,14 @@ export default function Entrenamiento({ rutina, onVolver, onFinalizar }) {
             )}
 
             {completados > 0 && (
-              <button
-                onClick={() => onFinalizar(seriesGuardadas)}
-                className="btn-primary mb-8 mt-2 w-full rounded-2xl py-4 text-base transition hover:brightness-110 active:scale-[0.99]"
-              >
-                Finalizar entrenamiento
-              </button>
+              <div className="sticky bottom-[calc(env(safe-area-inset-bottom)+0.4rem)] z-20 -mx-1 mt-2 bg-gradient-to-t from-[rgba(8,18,34,0.95)] via-[rgba(8,18,34,0.76)] to-transparent px-1 pb-1.5 pt-3">
+                <button
+                  onClick={() => onFinalizar(seriesGuardadas)}
+                  className="btn-primary w-full rounded-2xl px-4 py-4 text-base transition active:scale-[0.99]"
+                >
+                  Finalizar entrenamiento
+                </button>
+              </div>
             )}
           </div>
         </div>
