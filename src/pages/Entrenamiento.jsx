@@ -36,25 +36,23 @@ function Cronometro({ segundos, onTerminar }) {
         setRestante(nuevo)
       }
     }, 500)
-
     return () => clearInterval(ref.current)
   }, [segundos])
 
   const porcentaje = (restante / segundos) * 100
   const mins = Math.floor(restante / 60)
   const segs = restante % 60
-  const color = restante <= 10 ? '#ff6c7c' : restante <= 30 ? '#ffc76f' : '#37e2b7'
 
   return (
-    <div className="mt-3 rounded-xl border border-cyan-200/15 bg-slate-950/55 p-3">
+    <div className="mt-3 rounded-xl border border-[var(--surface-container-highest)] bg-[var(--surface)] p-3">
       <div className="mb-2 flex items-center justify-between">
         <span className="section-label">Descanso</span>
-        <span className="mono text-sm font-black" style={{ color }}>
+        <span className="mono text-sm font-semibold text-[var(--primary)]">
           {mins}:{segs.toString().padStart(2, '0')}
         </span>
       </div>
-      <div className="h-1 w-full rounded-full bg-slate-700/60">
-        <div className="h-1 rounded-full transition-all duration-500" style={{ width: `${porcentaje}%`, background: color }} />
+      <div className="h-1.5 w-full rounded-full bg-[#dde3e6]">
+        <div className="h-1.5 rounded-full bg-[var(--primary)] transition-all duration-500" style={{ width: `${porcentaje}%` }} />
       </div>
     </div>
   )
@@ -73,19 +71,15 @@ function FilaSerie({ numSerie, unidad, onCompletar, completada, descansoSegundos
   }
 
   return (
-    <div className={`mb-2 rounded-2xl border p-3 ${completada ? 'border-emerald-300/30 bg-emerald-400/8' : 'border-sky-300/15 bg-slate-900/40'}`}>
-      <div className="flex items-center gap-2.5">
-        <div
-          className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full text-xs font-black ${
-            completada ? 'bg-emerald-400/20 text-emerald-200' : 'bg-slate-700/80 text-[var(--text-soft)]'
-          }`}
-        >
+    <div className={`mb-2 rounded-xl border p-3 ${completada ? 'border-[#bdd9c1] bg-[#ebf6ea]' : 'border-[var(--surface-container-highest)] bg-[var(--surface)]'}`}>
+      <div className="flex items-center gap-2">
+        <div className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-semibold ${completada ? 'bg-[#d7ebda] text-[#2e5e35]' : 'bg-[var(--surface-container)] text-[var(--on-surface-variant)]'}`}>
           {completada ? 'OK' : numSerie}
         </div>
 
         <div className="flex flex-1 gap-2">
-          <div className="flex-1 rounded-xl border border-sky-300/15 bg-slate-950/60 p-2.5 text-center">
-            <div className="mb-1 text-xs text-[var(--text-faint)]">{unidad === 'kg' ? 'Kg' : 'Lbs'}</div>
+          <div className="flex-1 rounded-xl border border-[var(--surface-container-highest)] bg-[#fff] p-2 text-center">
+            <div className="mb-1 text-xs text-[var(--on-surface-variant)]">{unidad === 'kg' ? 'Kg' : 'Lbs'}</div>
             <input
               type="number"
               inputMode="decimal"
@@ -94,11 +88,11 @@ function FilaSerie({ numSerie, unidad, onCompletar, completada, descansoSegundos
               onChange={(e) => setPeso(e.target.value)}
               placeholder="0"
               disabled={completada}
-              className="field-input disabled:opacity-50"
+              className="field-input disabled:opacity-40"
             />
           </div>
-          <div className="flex-1 rounded-xl border border-sky-300/15 bg-slate-950/60 p-2.5 text-center">
-            <div className="mb-1 text-xs text-[var(--text-faint)]">Reps</div>
+          <div className="flex-1 rounded-xl border border-[var(--surface-container-highest)] bg-[#fff] p-2 text-center">
+            <div className="mb-1 text-xs text-[var(--on-surface-variant)]">Reps</div>
             <input
               type="number"
               inputMode="numeric"
@@ -107,20 +101,20 @@ function FilaSerie({ numSerie, unidad, onCompletar, completada, descansoSegundos
               onChange={(e) => setReps(e.target.value)}
               placeholder="0"
               disabled={completada}
-              className="field-input disabled:opacity-50"
+              className="field-input disabled:opacity-40"
             />
           </div>
         </div>
 
         {!completada && (
-          <div className="flex flex-shrink-0 flex-col gap-1">
+          <div className="flex flex-col gap-1">
             {datosPrevios && (
               <button
                 onClick={() => {
                   setPeso(unidad === 'lbs' ? parseFloat((datosPrevios.peso_kg * 2.20462).toFixed(1)) : datosPrevios.peso_kg)
                   setReps(datosPrevios.repeticiones)
                 }}
-                className="h-11 w-11 rounded-full border border-sky-300/40 bg-sky-400/10 text-xs text-sky-100 transition active:scale-95"
+                className="h-11 w-11 rounded-full border border-[#c4d9e0] bg-[#e8f2f6] text-xs font-semibold text-[#344a52] active:scale-95"
                 title="Repetir serie anterior"
               >
                 REP
@@ -129,7 +123,7 @@ function FilaSerie({ numSerie, unidad, onCompletar, completada, descansoSegundos
             <button
               onClick={handleCompletar}
               disabled={!peso || !reps}
-              className="h-11 w-11 rounded-full border border-emerald-300/60 bg-emerald-400/15 text-xs font-bold text-emerald-100 transition active:scale-95 disabled:opacity-25"
+              className="h-11 w-11 rounded-full border border-[#8fb0bc] bg-[#cee7f0] text-xs font-semibold text-[#2f454d] active:scale-95 disabled:opacity-35"
             >
               OK
             </button>
@@ -148,17 +142,8 @@ function redondearPeso(valor, paso = 2.5) {
 
 function generarCalentamiento(prKg) {
   if (!prKg || prKg < 5) return []
-  if (prKg < 30) {
-    return [
-      { porcentaje: 0.5, reps: 10 },
-      { porcentaje: 0.7, reps: 6 },
-    ]
-  }
-  return [
-    { porcentaje: 0.5, reps: 10 },
-    { porcentaje: 0.75, reps: 5 },
-    { porcentaje: 0.875, reps: 3 },
-  ]
+  if (prKg < 30) return [{ porcentaje: 0.5, reps: 10 }, { porcentaje: 0.7, reps: 6 }]
+  return [{ porcentaje: 0.5, reps: 10 }, { porcentaje: 0.75, reps: 5 }, { porcentaje: 0.875, reps: 3 }]
 }
 
 function TarjetaEjercicio({ ejercicio, unidad, onSeriesCompletas, recordsMap }) {
@@ -167,16 +152,11 @@ function TarjetaEjercicio({ ejercicio, unidad, onSeriesCompletas, recordsMap }) 
   const [ejercicioActual, setEjercicioActual] = useState(ejercicio)
 
   const maxSeries = parseInt(
-    ejercicioActual.series_objetivo?.includes('-')
-      ? ejercicioActual.series_objetivo.split('-')[1]
-      : ejercicioActual.series_objetivo || '3',
+    ejercicioActual.series_objetivo?.includes('-') ? ejercicioActual.series_objetivo.split('-')[1] : ejercicioActual.series_objetivo || '3',
     10,
   )
-
   const numSeriesMin = parseInt(
-    ejercicioActual.series_objetivo?.includes('-')
-      ? ejercicioActual.series_objetivo.split('-')[0]
-      : ejercicioActual.series_objetivo || '3',
+    ejercicioActual.series_objetivo?.includes('-') ? ejercicioActual.series_objetivo.split('-')[0] : ejercicioActual.series_objetivo || '3',
     10,
   )
 
@@ -184,70 +164,42 @@ function TarjetaEjercicio({ ejercicio, unidad, onSeriesCompletas, recordsMap }) 
     (datosSerie) => {
       setSeries((prev) => {
         const nuevas = [...prev, datosSerie]
-        if (nuevas.length >= maxSeries) {
-          onSeriesCompletas(ejercicioActual.ejercicio_id, ejercicioActual.nombre, nuevas)
-        }
+        if (nuevas.length >= maxSeries) onSeriesCompletas(ejercicioActual.ejercicio_id, ejercicioActual.nombre, nuevas)
         return nuevas
       })
     },
     [maxSeries, ejercicioActual.ejercicio_id, ejercicioActual.nombre, onSeriesCompletas],
   )
 
-  const handleAlternar = (alternativa) => {
-    setEjercicioActual(alternativa)
-    setSeries([])
-    setModalAbierto(false)
-  }
-
   const completado = series.length >= numSeriesMin
   const prKg = recordsMap?.[ejercicioActual.ejercicio_id]?.peso || null
-  const sugerenciasCalentamiento = generarCalentamiento(prKg).map((paso) => {
-    const pesoKg = redondearPeso(prKg * paso.porcentaje)
-    if (unidad === 'lbs') {
-      return {
-        peso: parseFloat((pesoKg * 2.20462).toFixed(1)),
-        reps: paso.reps,
-        unidad: 'lbs',
-      }
-    }
-    return {
-      peso: parseFloat(pesoKg.toFixed(1)),
-      reps: paso.reps,
-      unidad: 'kg',
-    }
+  const sugerencias = generarCalentamiento(prKg).map((paso) => {
+    const kg = redondearPeso(prKg * paso.porcentaje)
+    return unidad === 'lbs'
+      ? { peso: parseFloat((kg * 2.20462).toFixed(1)), unidad: 'lbs', reps: paso.reps }
+      : { peso: parseFloat(kg.toFixed(1)), unidad: 'kg', reps: paso.reps }
   })
 
   return (
     <>
-      <div className="panel-strong mb-3 rounded-2xl p-4">
+      <div className="panel-strong mb-3 rounded-xl p-4">
         <div className="mb-3 flex items-start justify-between gap-2">
-          <h3 className="flex-1 text-base font-extrabold leading-tight">{ejercicioActual.nombre}</h3>
-          <button
-            onClick={() => setModalAbierto(true)}
-            className="btn-secondary rounded-xl px-2.5 py-1.5 text-xs transition hover:bg-slate-800/85 active:scale-95"
-          >
-            Ver / Alt
-          </button>
+          <h3 className="text-base font-semibold">{ejercicioActual.nombre}</h3>
+          <button onClick={() => setModalAbierto(true)} className="btn-secondary rounded-lg px-3 py-1.5 text-xs">Ver / Alt</button>
         </div>
 
         <div className="mb-3 flex flex-wrap gap-2">
-          {[`${ejercicioActual.series_objetivo} series`, `${ejercicioActual.reps_objetivo} reps`, `${Math.floor(ejercicioActual.descanso_segundos / 60)}:${(ejercicioActual.descanso_segundos % 60).toString().padStart(2, '0')} desc`].map(
-            (tag) => (
-              <span key={tag} className="chip">
-                {tag}
-              </span>
-            ),
-          )}
+          {[`${ejercicioActual.series_objetivo} series`, `${ejercicioActual.reps_objetivo} reps`, `${Math.floor(ejercicioActual.descanso_segundos / 60)}:${(ejercicioActual.descanso_segundos % 60).toString().padStart(2, '0')} desc`].map((tag) => (
+            <span key={tag} className="chip">{tag}</span>
+          ))}
         </div>
 
-        {sugerenciasCalentamiento.length > 0 && series.length === 0 && (
-          <div className="mb-3 rounded-xl border border-amber-300/30 bg-amber-300/10 p-3">
-            <p className="mb-2 text-xs font-semibold uppercase tracking-[0.08em] text-amber-100/90">
-              Calentamiento sugerido (segun tu historial)
-            </p>
+        {sugerencias.length > 0 && series.length === 0 && (
+          <div className="mb-3 rounded-xl border border-[#e6cfab] bg-[#fff4e5] p-3">
+            <p className="section-label mb-2 text-[#7a5a33]">Calentamiento sugerido</p>
             <div className="flex flex-wrap gap-2">
-              {sugerenciasCalentamiento.map((paso, index) => (
-                <span key={`${paso.peso}-${paso.reps}-${index}`} className="chip border-amber-300/35 bg-amber-200/10 text-amber-100">
+              {sugerencias.map((paso, i) => (
+                <span key={`${paso.peso}-${i}`} className="chip border-[#e8ceb1] bg-[#ffead2] text-[#6f5130]">
                   {paso.peso} {paso.unidad} x {paso.reps}
                 </span>
               ))}
@@ -267,14 +219,20 @@ function TarjetaEjercicio({ ejercicio, unidad, onSeriesCompletas, recordsMap }) 
           />
         ))}
 
-        {completado && (
-          <div className="mt-3 rounded-xl border border-emerald-300/35 bg-emerald-400/10 px-3 py-2 text-xs font-semibold text-emerald-100">
-            Ejercicio completado.
-          </div>
-        )}
+        {completado && <div className="mt-2 rounded-lg bg-[#e7f4e8] px-3 py-2 text-xs font-semibold text-[#2c5c32]">Ejercicio completado</div>}
       </div>
 
-      {modalAbierto && <ModalEjercicio ejercicio={ejercicioActual} onCerrar={() => setModalAbierto(false)} onAlternar={handleAlternar} />}
+      {modalAbierto && (
+        <ModalEjercicio
+          ejercicio={ejercicioActual}
+          onCerrar={() => setModalAbierto(false)}
+          onAlternar={(alternativa) => {
+            setEjercicioActual(alternativa)
+            setSeries([])
+            setModalAbierto(false)
+          }}
+        />
+      )}
     </>
   )
 }
@@ -298,7 +256,6 @@ export default function Entrenamiento({ rutina, onVolver, onFinalizar, onEstadoC
         setCargando(false)
       }
     }
-
     cargar()
   }, [rutina.id])
 
@@ -314,12 +271,7 @@ export default function Entrenamiento({ rutina, onVolver, onFinalizar, onEstadoC
   const handleSeriesCompletas = useCallback((ejercicioId, nombreEjercicio, series) => {
     setSeriesGuardadas((prev) => ({ ...prev, [ejercicioId]: series }))
     const mejorSerie = series.reduce((max, s) => (s.peso_kg > max.peso_kg ? s : max), series[0])
-    guardarRegistroHistorial({
-      ejercicioId,
-      nombreEjercicio,
-      pesoKg: mejorSerie.peso_kg,
-      repeticiones: mejorSerie.repeticiones,
-    })
+    guardarRegistroHistorial({ ejercicioId, nombreEjercicio, pesoKg: mejorSerie.peso_kg, repeticiones: mejorSerie.repeticiones })
     if (esNuevoRecord(ejercicioId, mejorSerie.peso_kg)) {
       actualizarRecord(ejercicioId, nombreEjercicio, mejorSerie.peso_kg)
       setRecordsMap(obtenerRecords())
@@ -327,72 +279,48 @@ export default function Entrenamiento({ rutina, onVolver, onFinalizar, onEstadoC
     }
   }, [])
 
-  const totalEjercicios = ejercicios.length
   const completados = Object.keys(seriesGuardadas).length
-  const porcentaje = totalEjercicios > 0 ? (completados / totalEjercicios) * 100 : 0
+  const total = ejercicios.length
+  const porcentaje = total > 0 ? (completados / total) * 100 : 0
 
   return (
-    <div className="min-h-screen px-3 py-4 sm:px-6">
-      <div className="relative z-10 mx-auto w-full max-w-3xl">
-        <div className="panel rounded-3xl pb-2">
-          <div className="sticky top-[env(safe-area-inset-top)] z-10 rounded-t-3xl border-b border-white/8 bg-[rgba(8,18,34,0.94)] px-4 pb-4 pt-4 backdrop-blur sm:px-5 sm:pt-5">
-            <div className="mb-3 flex items-center justify-between">
-              <button onClick={onVolver} className="btn-secondary rounded-xl px-3 py-2 text-xs">
-                Volver
-              </button>
-              <button
-                onClick={() => setUnidad((u) => (u === 'kg' ? 'lbs' : 'kg'))}
-                className="btn-secondary rounded-full px-3 py-1.5 text-xs"
-              >
-                {unidad === 'kg' ? 'kg a lbs' : 'lbs a kg'}
-              </button>
-            </div>
-
-            <h2 className="mb-2 text-xl font-extrabold tracking-tight">
-              {rutina.nombre} - Dia {rutina.dia}
-            </h2>
-            <div className="flex items-center gap-3">
-              <div className="h-1.5 flex-1 rounded-full bg-slate-700/65">
-                <div className="h-1.5 rounded-full bg-gradient-to-r from-emerald-300 to-cyan-300 transition-all duration-500" style={{ width: `${porcentaje}%` }} />
-              </div>
-              <span className="mono text-xs font-bold text-[var(--text-soft)]">
-                {completados}/{totalEjercicios}
-              </span>
-            </div>
-          </div>
-
-          <div className="px-4 py-4 sm:px-5">
-            {cargando ? (
-              <div className="py-20 text-center text-sm text-[var(--text-soft)]">Cargando rutina...</div>
-            ) : ejercicios.length === 0 ? (
-              <div className="py-20 text-center text-[var(--text-soft)]">Sin ejercicios.</div>
-            ) : (
-              ejercicios.map((ej) => (
-                <TarjetaEjercicio
-                  key={ej.ejercicio_id}
-                  ejercicio={ej}
-                  unidad={unidad}
-                  onSeriesCompletas={handleSeriesCompletas}
-                  recordsMap={recordsMap}
-                />
-              ))
-            )}
-
-            {completados > 0 && (
-              <div className="sticky bottom-[calc(env(safe-area-inset-bottom)+0.4rem)] z-20 -mx-1 mt-2 bg-gradient-to-t from-[rgba(8,18,34,0.95)] via-[rgba(8,18,34,0.76)] to-transparent px-1 pb-1.5 pt-3">
-                <button
-                  onClick={() => onFinalizar(seriesGuardadas)}
-                  className="btn-primary w-full rounded-2xl px-4 py-4 text-base transition active:scale-[0.99]"
-                >
-                  Finalizar entrenamiento
-                </button>
-              </div>
-            )}
-          </div>
+    <main className="mx-auto min-h-screen w-full max-w-md px-5 pb-[120px] pt-[88px]">
+      <section className="panel rounded-xl p-4">
+        <div className="mb-4 flex items-center justify-between">
+          <button onClick={onVolver} className="btn-secondary rounded-xl px-3 py-2 text-sm">Volver</button>
+          <button onClick={() => setUnidad((u) => (u === 'kg' ? 'lbs' : 'kg'))} className="btn-secondary rounded-full px-3 py-2 text-xs">
+            {unidad === 'kg' ? 'kg a lbs' : 'lbs a kg'}
+          </button>
         </div>
-      </div>
+
+        <h2 className="mb-2 text-2xl font-semibold">{rutina.nombre} - Dia {rutina.dia}</h2>
+        <div className="mb-4 flex items-center gap-2">
+          <div className="h-1.5 flex-1 rounded-full bg-[#d8dddd]">
+            <div className="h-1.5 rounded-full bg-[var(--primary)] transition-all duration-300" style={{ width: `${porcentaje}%` }} />
+          </div>
+          <span className="text-xs text-[var(--on-surface-variant)]">{completados}/{total}</span>
+        </div>
+
+        {cargando ? (
+          <div className="py-16 text-center text-sm text-[var(--on-surface-variant)]">Cargando rutina...</div>
+        ) : ejercicios.length === 0 ? (
+          <div className="py-16 text-center text-sm text-[var(--on-surface-variant)]">Sin ejercicios.</div>
+        ) : (
+          ejercicios.map((ej) => (
+            <TarjetaEjercicio key={ej.ejercicio_id} ejercicio={ej} unidad={unidad} onSeriesCompletas={handleSeriesCompletas} recordsMap={recordsMap} />
+          ))
+        )}
+
+        {completados > 0 && (
+          <div className="sticky bottom-[calc(env(safe-area-inset-bottom)+0.5rem)] pt-2">
+            <button onClick={() => onFinalizar(seriesGuardadas)} className="btn-primary w-full rounded-xl px-5 py-4 text-sm">
+              Finalizar entrenamiento
+            </button>
+          </div>
+        )}
+      </section>
 
       {prDetectado && <ConfettiPR nombre={prDetectado.nombre} peso={prDetectado.peso} onCerrar={() => setPrDetectado(null)} />}
-    </div>
+    </main>
   )
 }

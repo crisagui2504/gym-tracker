@@ -13,29 +13,27 @@ const RUTINAS = [
   { id: 9, nombre: 'Pierna', dia: 3, tipo: 'leg' },
 ]
 
-const ESTILOS = {
+const LANE = {
   push: {
-    card: 'from-rose-500/10 to-red-900/5 border-rose-300/25',
-    icon: 'bg-rose-500/20 text-rose-200',
-    nombre: 'text-rose-200',
-    simbolo: 'P',
+    title: 'Push',
+    card: 'bg-[var(--lane-push-bg)] text-[var(--lane-push-text)] shadow-[0_4px_12px_rgba(0,0,0,0.12)]',
+    badge: 'bg-[var(--lane-push-badge-bg)] text-[var(--lane-push-badge-text)]',
   },
   pull: {
-    card: 'from-sky-500/10 to-blue-900/5 border-sky-300/25',
-    icon: 'bg-sky-500/20 text-sky-200',
-    nombre: 'text-sky-200',
-    simbolo: 'U',
+    title: 'Pull',
+    card: 'bg-[var(--lane-pull-bg)] text-[var(--lane-pull-text)] shadow-[0_4px_12px_rgba(0,0,0,0.12)]',
+    badge: 'bg-[var(--lane-pull-badge-bg)] text-[var(--lane-pull-badge-text)]',
   },
   leg: {
-    card: 'from-emerald-500/12 to-teal-900/5 border-emerald-300/25',
-    icon: 'bg-emerald-500/20 text-emerald-200',
-    nombre: 'text-emerald-200',
-    simbolo: 'L',
+    title: 'Legs',
+    card: 'bg-[var(--lane-leg-bg)] text-[var(--lane-leg-text)] shadow-[0_4px_12px_rgba(0,0,0,0.12)]',
+    badge: 'bg-[var(--lane-leg-badge-bg)] text-[var(--lane-leg-badge-text)]',
   },
 }
 
 export default function SeleccionRutina({ onSeleccionar, onDashboard, sesionPausada, onReanudar, onDescartarSesion }) {
   const [racha, setRacha] = useState({ dias: 0, ultimaFecha: null })
+  const [temaOscuro, setTemaOscuro] = useState(() => localStorage.getItem('gym_theme') === 'dark')
 
   useEffect(() => {
     getRachaServidor().then((data) => {
@@ -43,87 +41,93 @@ export default function SeleccionRutina({ onSeleccionar, onDashboard, sesionPaus
     })
   }, [])
 
+  useEffect(() => {
+    document.body.classList.toggle('theme-dark', temaOscuro)
+    localStorage.setItem('gym_theme', temaOscuro ? 'dark' : 'light')
+  }, [temaOscuro])
+
   const hoy = new Date().toLocaleDateString('es-MX', {
     weekday: 'long',
     day: 'numeric',
     month: 'long',
   })
 
+  const porTipo = {
+    push: RUTINAS.filter((r) => r.tipo === 'push'),
+    pull: RUTINAS.filter((r) => r.tipo === 'pull'),
+    leg: RUTINAS.filter((r) => r.tipo === 'leg'),
+  }
+
   return (
-    <div className="min-h-screen px-3 py-4 sm:px-6">
-      <div className="relative z-10 mx-auto w-full max-w-3xl">
-        <div className="panel rounded-3xl px-4 py-5 sm:px-6">
-          <div className="mb-6 flex items-start justify-between gap-3 sm:mb-7">
-            <div>
-              <h1 className="text-2xl font-extrabold tracking-tight sm:text-4xl">Gym Tracker</h1>
-              <p className="mt-1 text-sm capitalize text-[var(--text-soft)]">{hoy}</p>
-            </div>
-            <div className="rounded-2xl border border-amber-300/35 bg-amber-200/10 px-3 py-2.5 text-center sm:px-4 sm:py-3">
-              <div className="text-xs font-semibold tracking-[0.14em] text-amber-100/90">RACHA</div>
-              <div className="mono mt-1 text-2xl font-black leading-none text-amber-200">{racha.dias}</div>
-              <div className="mt-1 text-[0.65rem] tracking-[0.12em] text-amber-100/80">DIAS</div>
-            </div>
-          </div>
+    <main className="mx-auto flex min-h-screen w-full max-w-6xl flex-col gap-6 px-5 pb-[120px] pt-[88px] lg:px-8 lg:pt-[96px]">
+      <button
+        type="button"
+        onClick={() => setTemaOscuro((prev) => !prev)}
+        className="theme-toggle fixed left-4 top-4 z-40 flex items-center gap-2"
+        aria-label="Cambiar tema"
+      >
+        <span>{temaOscuro ? '☀' : '🌙'}</span>
+        <span className="hidden sm:inline">{temaOscuro ? 'Light' : 'Dark'}</span>
+      </button>
 
+      <section className="flex flex-col gap-3">
+        <h2 className="font-['Lexend'] text-sm capitalize text-[var(--on-surface-variant)]">{hoy}</h2>
+        <div className="panel rounded-xl p-5 lg:p-6">
           <div className="mb-3 flex items-center justify-between">
-            <p className="section-label">Elige tu rutina</p>
-            <span className="chip">9 opciones</span>
+            <h1 className="text-[30px] font-bold leading-tight tracking-tight text-[var(--on-surface)]">Gym Tracker</h1>
           </div>
-
-          {sesionPausada && (
-            <div className="mb-4 rounded-2xl border border-emerald-300/30 bg-emerald-400/10 p-3">
-              <p className="text-sm font-bold text-emerald-100">Tienes una rutina en pausa</p>
-              <p className="mt-1 text-xs text-[var(--text-soft)]">
-                {sesionPausada.rutina.nombre} - Dia {sesionPausada.rutina.dia}
-              </p>
-              <div className="mt-3 flex gap-2">
-                <button
-                  onClick={onReanudar}
-                  className="btn-primary flex-1 rounded-xl px-3 py-2.5 text-sm"
-                >
-                  Reanudar
-                </button>
-                <button
-                  onClick={onDescartarSesion}
-                  className="btn-secondary rounded-xl px-3 py-2.5 text-sm"
-                >
-                  Descartar
-                </button>
-              </div>
+          <div className="flex items-center gap-4">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--secondary-fixed)] text-lg">🔥</div>
+            <div>
+              <p className="text-2xl font-bold text-[var(--on-surface)]">{racha.dias} Dias</p>
+              <p className="text-sm text-[var(--on-surface-variant)]">Racha actual</p>
             </div>
-          )}
+          </div>
+        </div>
+      </section>
 
-          <div className="mb-5 grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-3">
-            {RUTINAS.map((rutina) => {
-              const est = ESTILOS[rutina.tipo]
-              return (
+      {sesionPausada && (
+        <section className="rounded-xl border border-[#c8dac7] bg-[#ebf6ea] p-4">
+          <p className="font-['Lexend'] text-sm text-[#345b39]">Sesion pausada</p>
+          <p className="mt-1 text-base font-semibold text-[#1f3222]">
+            {sesionPausada.rutina.nombre} - Dia {sesionPausada.rutina.dia}
+          </p>
+          <div className="mt-3 flex gap-2">
+            <button onClick={onReanudar} className="btn-primary flex-1 rounded-xl px-4 py-2.5 text-sm">Reanudar</button>
+            <button onClick={onDescartarSesion} className="btn-secondary rounded-xl px-4 py-2.5 text-sm">Descartar</button>
+          </div>
+        </section>
+      )}
+
+      <div className="grid gap-6 lg:grid-cols-3">
+        {['push', 'pull', 'leg'].map((tipo) => (
+          <section key={tipo} className="flex flex-col gap-3">
+            <div className="flex items-center justify-between">
+              <h3 className="text-2xl font-semibold text-[var(--on-surface)]">{LANE[tipo].title}</h3>
+              <span className="chip">{porTipo[tipo].length} dias</span>
+            </div>
+            <div className="hide-scrollbar flex snap-x gap-4 overflow-x-auto pb-1 lg:grid lg:grid-cols-1 lg:overflow-visible">
+              {porTipo[tipo].map((rutina) => (
                 <button
                   key={rutina.id}
                   onClick={() => onSeleccionar(rutina)}
-                  className={`hover-lift min-h-[138px] rounded-2xl border bg-gradient-to-br p-3.5 text-left transition duration-200 active:scale-95 sm:min-h-[150px] sm:p-4 ${est.card}`}
+                  className={`hover-lift min-h-[160px] min-w-[220px] snap-start rounded-xl p-5 text-left transition duration-200 active:scale-[0.98] lg:min-w-0 ${LANE[tipo].card}`}
                 >
-                  <div className={`${est.icon} mb-2.5 flex h-9 w-9 items-center justify-center rounded-xl text-base font-black sm:mb-3 sm:h-10 sm:w-10`}>
-                    {est.simbolo}
-                  </div>
-                  <div className={`text-[1.07rem] font-bold ${est.nombre}`}>{rutina.nombre}</div>
-                  <div className="mt-0.5 text-xs text-[var(--text-faint)]">Dia {rutina.dia}</div>
+                  <span className={`mb-3 inline-block rounded-full px-3 py-1 text-xs font-semibold ${LANE[tipo].badge}`}>Dia {rutina.dia}</span>
+                  <h4 className="text-2xl font-semibold">{rutina.nombre}</h4>
+                  <p className="mt-2 text-sm opacity-80">Iniciar entrenamiento</p>
                 </button>
-              )
-            })}
-          </div>
-
-          <button
-            onClick={onDashboard}
-            className="btn-secondary w-full rounded-2xl px-4 py-3.5 text-sm transition duration-200 active:scale-[0.99]"
-          >
-            Ver mi progreso
-          </button>
-
-          <div className="mt-4 rounded-2xl border border-sky-300/20 bg-sky-400/5 px-4 py-3 text-xs text-[var(--text-soft)]">
-            Tip: completa al menos una rutina diaria para mantener la racha y alimentar tus estadisticas.
-          </div>
-        </div>
+              ))}
+            </div>
+          </section>
+        ))}
       </div>
-    </div>
+
+      <section className="mt-2">
+        <button onClick={onDashboard} className="btn-primary w-full rounded-xl px-5 py-4 text-sm">
+          Ver mi progreso
+        </button>
+      </section>
+    </main>
   )
 }
