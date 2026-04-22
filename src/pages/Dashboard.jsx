@@ -16,82 +16,87 @@ export default function Dashboard({ onVolver }) {
   const lista = Object.values(records)
 
   return (
-    <div className="min-h-screen text-white" style={{ background: '#080C14' }}>
-      <div className="max-w-md mx-auto px-5">
-
-        <div className="flex items-center gap-3 pt-5 pb-4" style={{ borderBottom: '1px solid #0D1117' }}>
-          <button onClick={onVolver} className="text-gray-500 text-sm font-semibold">← Volver</button>
-          <h2 className="font-black text-xl tracking-tight">Mi progreso</h2>
-        </div>
-
-        {lista.length === 0 ? (
-          <div className="text-center py-24">
-            <div className="text-5xl mb-4">📊</div>
-            <p className="text-gray-500 font-semibold">Sin datos aún</p>
-            <p className="text-gray-700 text-sm mt-1">Completa entrenamientos para ver tu progreso</p>
+    <div className="min-h-screen px-4 py-5 sm:px-6">
+      <div className="relative z-10 mx-auto w-full max-w-3xl">
+        <div className="panel rounded-3xl px-5 py-6 sm:px-6">
+          <div className="mb-5 flex items-center justify-between gap-2 border-b border-white/8 pb-4">
+            <button onClick={onVolver} className="btn-secondary rounded-xl px-3 py-2 text-xs">
+              Volver
+            </button>
+            <h2 className="text-xl font-extrabold tracking-tight sm:text-2xl">Mi progreso</h2>
           </div>
-        ) : (
-          <>
-            <div className="mt-5 mb-4">
-              <p className="text-gray-600 text-xs font-semibold tracking-widest uppercase mb-3">
-                Récords personales
-              </p>
-              <div className="flex flex-col gap-2">
-                {lista.map(record => (
+
+          {lista.length === 0 ? (
+            <div className="rounded-2xl border border-sky-300/15 bg-sky-400/5 py-16 text-center">
+              <p className="text-base font-bold text-sky-100">Sin datos aun</p>
+              <p className="mt-1 text-sm text-[var(--text-soft)]">Completa entrenamientos para ver tus records.</p>
+            </div>
+          ) : (
+            <>
+              <div className="mb-4 flex items-center justify-between">
+                <p className="section-label">Records personales</p>
+                <span className="chip">{lista.length} ejercicios</span>
+              </div>
+
+              <div className="mb-5 grid gap-3 sm:grid-cols-2">
+                {lista.map((record) => (
                   <button
                     key={record.ejercicio_id}
                     onClick={() => setSeleccionado(record)}
-                    className="rounded-2xl p-4 flex items-center justify-between active:scale-95 transition-all"
-                    style={{
-                      background: seleccionado?.ejercicio_id === record.ejercicio_id ? '#1C2A1C' : '#0D1117',
-                      border: `1px solid ${seleccionado?.ejercicio_id === record.ejercicio_id ? '#166534' : '#161B22'}`
-                    }}
+                    className={`rounded-2xl border p-4 text-left transition duration-200 hover:-translate-y-0.5 active:scale-95 ${
+                      seleccionado?.ejercicio_id === record.ejercicio_id
+                        ? 'border-emerald-300/50 bg-emerald-400/10'
+                        : 'border-sky-300/20 bg-slate-900/45'
+                    }`}
                   >
-                    <div className="text-left">
-                      <p className="font-bold text-sm text-white">{record.nombre}</p>
-                      <p className="text-xs text-gray-600 mt-0.5">{record.fecha}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-2xl font-black text-green-400">{record.peso}</p>
-                      <p className="text-xs text-gray-600">kg</p>
+                    <p className="text-sm font-bold">{record.nombre}</p>
+                    <p className="mt-0.5 text-xs text-[var(--text-faint)]">{record.fecha}</p>
+                    <div className="mt-3 flex items-end justify-between">
+                      <span className="mono text-3xl font-black text-emerald-200">{record.peso}</span>
+                      <span className="text-xs text-[var(--text-soft)]">kg</span>
                     </div>
                   </button>
                 ))}
               </div>
-            </div>
 
-            {seleccionado && (
-              <div className="rounded-2xl p-4 mb-8" style={{ background: '#0D1117', border: '1px solid #161B22' }}>
-                <p className="text-gray-600 text-xs font-semibold tracking-widest uppercase mb-3">
-                  Evolución — {seleccionado.nombre}
-                </p>
-                <ResponsiveContainer width="100%" height={180}>
-                  <LineChart data={[
-                    { fecha: 'Inicio', peso: 0 },
-                    { fecha: seleccionado.fecha, peso: seleccionado.peso }
-                  ]}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#161B22" />
-                    <XAxis dataKey="fecha" stroke="#374151" fontSize={11} />
-                    <YAxis stroke="#374151" fontSize={11} />
-                    <Tooltip
-                      contentStyle={{ background: '#0D1117', border: '1px solid #161B22', borderRadius: '12px', color: '#fff' }}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="peso"
-                      stroke="#22C55E"
-                      strokeWidth={2}
-                      dot={{ fill: '#22C55E', r: 4 }}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-                <p className="text-gray-700 text-xs text-center mt-2">
-                  La gráfica crecerá con más entrenamientos
-                </p>
-              </div>
-            )}
-          </>
-        )}
+              {seleccionado && (
+                <div className="panel-strong rounded-2xl p-4">
+                  <p className="section-label mb-3">Evolucion - {seleccionado.nombre}</p>
+                  <ResponsiveContainer width="100%" height={220}>
+                    <LineChart
+                      data={[
+                        { fecha: 'Inicio', peso: 0 },
+                        { fecha: seleccionado.fecha, peso: seleccionado.peso },
+                      ]}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(143, 184, 255, 0.22)" />
+                      <XAxis dataKey="fecha" stroke="#8da4c6" fontSize={11} />
+                      <YAxis stroke="#8da4c6" fontSize={11} />
+                      <Tooltip
+                        contentStyle={{
+                          background: 'rgba(11, 24, 44, 0.95)',
+                          border: '1px solid rgba(143, 184, 255, 0.3)',
+                          borderRadius: '12px',
+                          color: '#eaf2ff',
+                        }}
+                      />
+                      <Line
+                        type="monotone"
+                        dataKey="peso"
+                        stroke="#37e2b7"
+                        strokeWidth={3}
+                        dot={{ fill: '#37e2b7', r: 4 }}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                  <p className="mt-2 text-center text-xs text-[var(--text-faint)]">
+                    Esta grafica crecera conforme acumules sesiones.
+                  </p>
+                </div>
+              )}
+            </>
+          )}
+        </div>
       </div>
     </div>
   )

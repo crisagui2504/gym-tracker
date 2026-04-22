@@ -4,24 +4,24 @@ import confetti from 'canvas-confetti'
 export default function ConfettiPR({ nombre, peso, onCerrar }) {
   useEffect(() => {
     confetti({
-      particleCount: 150,
-      spread: 80,
-      origin: { y: 0.6 }
+      particleCount: 160,
+      spread: 85,
+      origin: { y: 0.6 },
     })
   }, [])
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
-      <div className="bg-gray-900 rounded-3xl p-8 mx-4 text-center border border-yellow-500">
-        <p className="text-5xl mb-4">🏆</p>
-        <h2 className="text-2xl font-bold text-yellow-400 mb-2">¡Nuevo Récord!</h2>
-        <p className="text-white text-lg font-bold mb-1">{nombre}</p>
-        <p className="text-yellow-300 text-3xl font-bold mb-6">{peso} kg</p>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(2,10,20,0.82)] px-4">
+      <div className="panel max-w-sm rounded-3xl border-amber-300/35 p-7 text-center">
+        <div className="mb-3 text-xs font-bold tracking-[0.18em] text-amber-100/80">NUEVO RECORD</div>
+        <h2 className="mb-2 text-2xl font-extrabold text-amber-200">Excelente trabajo</h2>
+        <p className="mb-1 text-base font-bold text-slate-100">{nombre}</p>
+        <p className="mono mb-6 text-4xl font-black text-amber-100">{peso} kg</p>
         <button
           onClick={onCerrar}
-          className="bg-yellow-500 text-black font-bold px-8 py-3 rounded-2xl active:scale-95 transition-transform"
+          className="w-full rounded-2xl border border-amber-300/50 bg-amber-300/15 px-6 py-3 font-bold text-amber-100 transition hover:bg-amber-300/25 active:scale-[0.99]"
         >
-          ¡A seguir rompiendo! 💪
+          Seguir entrenando
         </button>
       </div>
     </div>

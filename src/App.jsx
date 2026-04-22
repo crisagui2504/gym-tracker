@@ -19,33 +19,22 @@ function App() {
     const resultado = await guardarEntrenamiento(rutinaActiva.id, seriesGuardadas)
     if (resultado.offline) {
       guardarLocal({ rutina_id: rutinaActiva.id, series: seriesGuardadas })
-      alert('Sin conexión. Entrenamiento guardado localmente.')
+      alert('Sin conexion. Entrenamiento guardado localmente.')
     } else {
       limpiarLocal()
-      alert('¡Entrenamiento guardado!')
+      alert('Entrenamiento guardado.')
     }
     setPantalla('seleccion')
     setRutinaActiva(null)
   }
 
   return (
-    <div className="min-h-screen bg-gray-950">
-      {pantalla === 'seleccion' && (
-        <SeleccionRutina
-          onSeleccionar={handleSeleccionar}
-          onDashboard={() => setPantalla('dashboard')}
-        />
-      )}
+    <div className="app-shell">
+      {pantalla === 'seleccion' && <SeleccionRutina onSeleccionar={handleSeleccionar} onDashboard={() => setPantalla('dashboard')} />}
       {pantalla === 'entrenamiento' && (
-        <Entrenamiento
-          rutina={rutinaActiva}
-          onVolver={() => setPantalla('seleccion')}
-          onFinalizar={handleFinalizar}
-        />
+        <Entrenamiento rutina={rutinaActiva} onVolver={() => setPantalla('seleccion')} onFinalizar={handleFinalizar} />
       )}
-      {pantalla === 'dashboard' && (
-        <Dashboard onVolver={() => setPantalla('seleccion')} />
-      )}
+      {pantalla === 'dashboard' && <Dashboard onVolver={() => setPantalla('seleccion')} />}
     </div>
   )
 }

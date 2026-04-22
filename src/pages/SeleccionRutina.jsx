@@ -15,22 +15,22 @@ const RUTINAS = [
 
 const ESTILOS = {
   push: {
-    card: 'bg-red-950 border border-red-900/40',
-    icon: 'bg-red-900/50',
-    nombre: 'text-red-400',
-    simbolo: '↑',
+    card: 'from-rose-500/10 to-red-900/5 border-rose-300/25',
+    icon: 'bg-rose-500/20 text-rose-200',
+    nombre: 'text-rose-200',
+    simbolo: 'P',
   },
   pull: {
-    card: 'bg-blue-950 border border-blue-900/40',
-    icon: 'bg-blue-900/50',
-    nombre: 'text-blue-400',
-    simbolo: '↓',
+    card: 'from-sky-500/10 to-blue-900/5 border-sky-300/25',
+    icon: 'bg-sky-500/20 text-sky-200',
+    nombre: 'text-sky-200',
+    simbolo: 'U',
   },
   leg: {
-    card: 'bg-green-950 border border-green-900/40',
-    icon: 'bg-green-900/50',
-    nombre: 'text-green-400',
-    simbolo: '⊥',
+    card: 'from-emerald-500/12 to-teal-900/5 border-emerald-300/25',
+    icon: 'bg-emerald-500/20 text-emerald-200',
+    nombre: 'text-emerald-200',
+    simbolo: 'L',
   },
 }
 
@@ -38,64 +38,68 @@ export default function SeleccionRutina({ onSeleccionar, onDashboard }) {
   const [racha, setRacha] = useState({ dias: 0, ultimaFecha: null })
 
   useEffect(() => {
-    getRachaServidor().then(data => {
+    getRachaServidor().then((data) => {
       if (data) setRacha(data)
     })
   }, [])
 
   const hoy = new Date().toLocaleDateString('es-MX', {
-    weekday: 'long', day: 'numeric', month: 'long'
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
   })
 
   return (
-    <div className="min-h-screen text-white p-5" style={{ background: '#080C14' }}>
-      <div className="max-w-md mx-auto">
-
-        <div className="flex items-start justify-between mb-8 pt-2">
-          <div>
-            <h1 className="text-3xl font-black tracking-tight">Gym Tracker</h1>
-            <p className="text-gray-500 text-sm mt-1 capitalize">{hoy}</p>
+    <div className="min-h-screen px-4 py-5 sm:px-6">
+      <div className="relative z-10 mx-auto w-full max-w-3xl">
+        <div className="panel rounded-3xl px-5 py-6 sm:px-6">
+          <div className="mb-7 flex items-start justify-between gap-4">
+            <div>
+              <h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl">Gym Tracker</h1>
+              <p className="mt-1 text-sm capitalize text-[var(--text-soft)]">{hoy}</p>
+            </div>
+            <div className="rounded-2xl border border-amber-300/35 bg-amber-200/10 px-4 py-3 text-center">
+              <div className="text-xs font-semibold tracking-[0.14em] text-amber-100/90">RACHA</div>
+              <div className="mono mt-1 text-2xl font-black leading-none text-amber-200">{racha.dias}</div>
+              <div className="mt-1 text-[0.65rem] tracking-[0.12em] text-amber-100/80">DIAS</div>
+            </div>
           </div>
-          <div className="rounded-2xl px-4 py-3 text-center border border-gray-800" style={{ background: '#0D1117' }}>
-            <div className="text-xl">🔥</div>
-            <div className="text-xl font-black text-orange-400 leading-none">{racha.dias}</div>
-            <div className="text-gray-600 text-xs tracking-widest mt-0.5">DÍAS</div>
+
+          <div className="mb-3 flex items-center justify-between">
+            <p className="section-label">Elige tu rutina</p>
+            <span className="chip">9 opciones</span>
+          </div>
+
+          <div className="mb-5 grid grid-cols-2 gap-3 sm:grid-cols-3">
+            {RUTINAS.map((rutina) => {
+              const est = ESTILOS[rutina.tipo]
+              return (
+                <button
+                  key={rutina.id}
+                  onClick={() => onSeleccionar(rutina)}
+                  className={`rounded-2xl border bg-gradient-to-br p-4 text-left transition duration-200 hover:-translate-y-0.5 active:scale-95 ${est.card}`}
+                >
+                  <div className={`${est.icon} mb-3 flex h-10 w-10 items-center justify-center rounded-xl text-base font-black`}>
+                    {est.simbolo}
+                  </div>
+                  <div className={`text-base font-bold ${est.nombre}`}>{rutina.nombre}</div>
+                  <div className="mt-0.5 text-xs text-[var(--text-faint)]">Dia {rutina.dia}</div>
+                </button>
+              )
+            })}
+          </div>
+
+          <button
+            onClick={onDashboard}
+            className="btn-secondary w-full rounded-2xl py-3.5 text-sm transition duration-200 hover:bg-slate-800/80 active:scale-[0.99]"
+          >
+            Ver mi progreso
+          </button>
+
+          <div className="mt-4 rounded-2xl border border-sky-300/20 bg-sky-400/5 px-4 py-3 text-xs text-[var(--text-soft)]">
+            Tip: completa al menos una rutina diaria para mantener la racha y alimentar tus estadisticas.
           </div>
         </div>
-
-        <p className="text-gray-600 text-xs font-semibold tracking-widest uppercase mb-3">
-          Elige tu rutina
-        </p>
-
-        <div className="grid grid-cols-3 gap-2.5 mb-5">
-          {RUTINAS.map((rutina) => {
-            const est = ESTILOS[rutina.tipo]
-            return (
-              <button
-                key={rutina.id}
-                onClick={() => onSeleccionar(rutina)}
-                className={`${est.card} rounded-2xl p-4 flex flex-col gap-2 text-left active:scale-95 transition-transform`}
-              >
-                <div className={`${est.icon} w-9 h-9 rounded-xl flex items-center justify-center text-lg font-black`}>
-                  <span className={est.nombre}>{est.simbolo}</span>
-                </div>
-                <div>
-                  <div className={`text-sm font-bold ${est.nombre}`}>{rutina.nombre}</div>
-                  <div className="text-gray-600 text-xs">Día {rutina.dia}</div>
-                </div>
-              </button>
-            )
-          })}
-        </div>
-
-        <button
-          onClick={onDashboard}
-          className="w-full rounded-2xl py-3.5 text-gray-500 text-sm font-semibold border border-gray-800 active:scale-95 transition-transform"
-          style={{ background: '#0D1117' }}
-        >
-          📊 Ver mi progreso
-        </button>
-
       </div>
     </div>
   )
