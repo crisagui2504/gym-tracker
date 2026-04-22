@@ -1,10 +1,65 @@
 import { useState, useEffect } from 'react'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
-import { obtenerRecords } from '../services/storage'
+import { getEstadisticas } from '../services/api'
+import { obtenerHistorialEjercicio, obtenerRecords } from '../services/storage'
+
+function extraerHistorialApi(payload) {
+  if (!payload) return []
+  const crudo = Array.isArray(payload)
+    ? payload
+    : payload.historial || payload.progreso || payload.series || payload.data || payload.datos || payload.estadisticas?.historial || []
+
+  if (!Array.isArray(crudo)) return []
+
+  return crudo
+    .map((item) => ({
+      fecha: item.fecha || item.fecha_entrenamiento || item.created_at || item.dia || null,
+      peso: Number(item.peso_kg ?? item.peso ?? item.max_peso ?? item.mejor_peso ?? item.pr),
+    }))
+    .filter((item) => item.fecha && Number.isFinite(item.peso))
+}
+
+function obtenerSemanaISO(fechaRaw) {
+  const fecha = new Date(fechaRaw)
+  if (Number.isNaN(fecha.getTime())) return null
+
+  const utc = new Date(Date.UTC(fecha.getFullYear(), fecha.getMonth(), fecha.getDate()))
+  const dayNum = utc.getUTCDay() || 7
+  utc.setUTCDate(utc.getUTCDate() + 4 - dayNum)
+  const yearStart = new Date(Date.UTC(utc.getUTCFullYear(), 0, 1))
+  const weekNo = Math.ceil((((utc - yearStart) / 86400000) + 1) / 7)
+
+  return {
+    year: utc.getUTCFullYear(),
+    week: weekNo,
+    key: `${utc.getUTCFullYear()}-W${String(weekNo).padStart(2, '0')}`,
+    label: `S${String(weekNo).padStart(2, '0')}/${String(utc.getUTCFullYear()).slice(-2)}`,
+  }
+}
+
+function agruparSemanal(historial) {
+  const mapa = {}
+  historial.forEach((punto) => {
+    const semana = obtenerSemanaISO(punto.fecha)
+    if (!semana) return
+    const actual = mapa[semana.key]
+    if (!actual || punto.peso > actual.peso) {
+      mapa[semana.key] = {
+        fecha: semana.label,
+        peso: parseFloat(punto.peso.toFixed(2)),
+        sortKey: semana.key,
+      }
+    }
+  })
+
+  return Object.values(mapa).sort((a, b) => a.sortKey.localeCompare(b.sortKey))
+}
 
 export default function Dashboard({ onVolver }) {
   const [records, setRecords] = useState({})
   const [seleccionado, setSeleccionado] = useState(null)
+  const [progresoSemanal, setProgresoSemanal] = useState([])
+  const [cargandoProgreso, setCargandoProgreso] = useState(false)
 
   useEffect(() => {
     const r = obtenerRecords()
@@ -12,6 +67,46 @@ export default function Dashboard({ onVolver }) {
     const primero = Object.values(r)[0]
     if (primero) setSeleccionado(primero)
   }, [])
+
+  useEffect(() => {
+    let activo = true
+
+    async function cargarProgreso() {
+      if (!seleccionado?.ejercicio_id) {
+        setProgresoSemanal([])
+        return
+      }
+
+      setCargandoProgreso(true)
+      let historial = []
+
+      try {
+        const dataApi = await getEstadisticas(seleccionado.ejercicio_id)
+        historial = extraerHistorialApi(dataApi)
+      } catch {
+        historial = []
+      }
+
+      if (historial.length === 0) {
+        historial = obtenerHistorialEjercicio(seleccionado.ejercicio_id)
+      }
+
+      const semanal = agruparSemanal(historial)
+      if (activo) {
+        if (semanal.length === 0 && seleccionado?.peso) {
+          setProgresoSemanal([{ fecha: 'Actual', peso: seleccionado.peso, sortKey: 'z' }])
+        } else {
+          setProgresoSemanal(semanal)
+        }
+        setCargandoProgreso(false)
+      }
+    }
+
+    cargarProgreso()
+    return () => {
+      activo = false
+    }
+  }, [seleccionado])
 
   const lista = Object.values(records)
 
@@ -61,14 +156,12 @@ export default function Dashboard({ onVolver }) {
 
               {seleccionado && (
                 <div className="panel-strong rounded-2xl p-4">
-                  <p className="section-label mb-3">Evolucion - {seleccionado.nombre}</p>
+                  <p className="section-label mb-1">Evolucion semanal - {seleccionado.nombre}</p>
+                  <p className="mb-3 text-xs text-[var(--text-soft)]">
+                    {cargandoProgreso ? 'Cargando progreso...' : `${progresoSemanal.length} semanas registradas`}
+                  </p>
                   <ResponsiveContainer width="100%" height={190}>
-                    <LineChart
-                      data={[
-                        { fecha: 'Inicio', peso: 0 },
-                        { fecha: seleccionado.fecha, peso: seleccionado.peso },
-                      ]}
-                    >
+                    <LineChart data={progresoSemanal}>
                       <CartesianGrid strokeDasharray="3 3" stroke="rgba(143, 184, 255, 0.22)" />
                       <XAxis dataKey="fecha" stroke="#8da4c6" fontSize={11} />
                       <YAxis stroke="#8da4c6" fontSize={11} />
@@ -90,7 +183,7 @@ export default function Dashboard({ onVolver }) {
                     </LineChart>
                   </ResponsiveContainer>
                   <p className="mt-2 text-center text-xs text-[var(--text-faint)]">
-                    Esta grafica crecera conforme acumules sesiones.
+                    La linea muestra el mejor peso de cada semana.
                   </p>
                 </div>
               )}

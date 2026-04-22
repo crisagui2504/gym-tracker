@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { getRutina } from '../services/api'
-import { actualizarRecord, esNuevoRecord } from '../services/storage'
+import { actualizarRecord, esNuevoRecord, obtenerRecords, guardarRegistroHistorial } from '../services/storage'
 import ConfettiPR from '../components/ConfettiPR'
 import ModalEjercicio from '../components/ModalEjercicio'
 
@@ -142,7 +142,26 @@ function FilaSerie({ numSerie, unidad, onCompletar, completada, descansoSegundos
   )
 }
 
-function TarjetaEjercicio({ ejercicio, unidad, onSeriesCompletas }) {
+function redondearPeso(valor, paso = 2.5) {
+  return Math.max(paso, Math.round(valor / paso) * paso)
+}
+
+function generarCalentamiento(prKg) {
+  if (!prKg || prKg < 5) return []
+  if (prKg < 30) {
+    return [
+      { porcentaje: 0.5, reps: 10 },
+      { porcentaje: 0.7, reps: 6 },
+    ]
+  }
+  return [
+    { porcentaje: 0.5, reps: 10 },
+    { porcentaje: 0.75, reps: 5 },
+    { porcentaje: 0.875, reps: 3 },
+  ]
+}
+
+function TarjetaEjercicio({ ejercicio, unidad, onSeriesCompletas, recordsMap }) {
   const [series, setSeries] = useState([])
   const [modalAbierto, setModalAbierto] = useState(false)
   const [ejercicioActual, setEjercicioActual] = useState(ejercicio)
@@ -181,6 +200,22 @@ function TarjetaEjercicio({ ejercicio, unidad, onSeriesCompletas }) {
   }
 
   const completado = series.length >= numSeriesMin
+  const prKg = recordsMap?.[ejercicioActual.ejercicio_id]?.peso || null
+  const sugerenciasCalentamiento = generarCalentamiento(prKg).map((paso) => {
+    const pesoKg = redondearPeso(prKg * paso.porcentaje)
+    if (unidad === 'lbs') {
+      return {
+        peso: parseFloat((pesoKg * 2.20462).toFixed(1)),
+        reps: paso.reps,
+        unidad: 'lbs',
+      }
+    }
+    return {
+      peso: parseFloat(pesoKg.toFixed(1)),
+      reps: paso.reps,
+      unidad: 'kg',
+    }
+  })
 
   return (
     <>
@@ -204,6 +239,21 @@ function TarjetaEjercicio({ ejercicio, unidad, onSeriesCompletas }) {
             ),
           )}
         </div>
+
+        {sugerenciasCalentamiento.length > 0 && series.length === 0 && (
+          <div className="mb-3 rounded-xl border border-amber-300/30 bg-amber-300/10 p-3">
+            <p className="mb-2 text-xs font-semibold uppercase tracking-[0.08em] text-amber-100/90">
+              Calentamiento sugerido (segun tu historial)
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {sugerenciasCalentamiento.map((paso, index) => (
+                <span key={`${paso.peso}-${paso.reps}-${index}`} className="chip border-amber-300/35 bg-amber-200/10 text-amber-100">
+                  {paso.peso} {paso.unidad} x {paso.reps}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
 
         {Array.from({ length: numSeriesMin }).map((_, i) => (
           <FilaSerie
@@ -235,6 +285,7 @@ export default function Entrenamiento({ rutina, onVolver, onFinalizar, onEstadoC
   const [cargando, setCargando] = useState(true)
   const [ejercicios, setEjercicios] = useState([])
   const [prDetectado, setPrDetectado] = useState(null)
+  const [recordsMap, setRecordsMap] = useState({})
 
   useEffect(() => {
     async function cargar() {
@@ -252,6 +303,10 @@ export default function Entrenamiento({ rutina, onVolver, onFinalizar, onEstadoC
   }, [rutina.id])
 
   useEffect(() => {
+    setRecordsMap(obtenerRecords())
+  }, [])
+
+  useEffect(() => {
     if (!onEstadoChange) return
     onEstadoChange({ unidad, seriesGuardadas })
   }, [unidad, seriesGuardadas, onEstadoChange])
@@ -259,8 +314,15 @@ export default function Entrenamiento({ rutina, onVolver, onFinalizar, onEstadoC
   const handleSeriesCompletas = useCallback((ejercicioId, nombreEjercicio, series) => {
     setSeriesGuardadas((prev) => ({ ...prev, [ejercicioId]: series }))
     const mejorSerie = series.reduce((max, s) => (s.peso_kg > max.peso_kg ? s : max), series[0])
+    guardarRegistroHistorial({
+      ejercicioId,
+      nombreEjercicio,
+      pesoKg: mejorSerie.peso_kg,
+      repeticiones: mejorSerie.repeticiones,
+    })
     if (esNuevoRecord(ejercicioId, mejorSerie.peso_kg)) {
       actualizarRecord(ejercicioId, nombreEjercicio, mejorSerie.peso_kg)
+      setRecordsMap(obtenerRecords())
       setPrDetectado({ nombre: nombreEjercicio, peso: mejorSerie.peso_kg })
     }
   }, [])
@@ -306,7 +368,13 @@ export default function Entrenamiento({ rutina, onVolver, onFinalizar, onEstadoC
               <div className="py-20 text-center text-[var(--text-soft)]">Sin ejercicios.</div>
             ) : (
               ejercicios.map((ej) => (
-                <TarjetaEjercicio key={ej.ejercicio_id} ejercicio={ej} unidad={unidad} onSeriesCompletas={handleSeriesCompletas} />
+                <TarjetaEjercicio
+                  key={ej.ejercicio_id}
+                  ejercicio={ej}
+                  unidad={unidad}
+                  onSeriesCompletas={handleSeriesCompletas}
+                  recordsMap={recordsMap}
+                />
               ))
             )}
 

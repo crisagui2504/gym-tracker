@@ -1,6 +1,7 @@
 const CLAVE_PENDIENTE = 'gym_entrenamiento_pendiente'
 const CLAVE_RECORDS = 'gym_records_personales'
 const CLAVE_SESION_ACTIVA = 'gym_sesion_activa'
+const CLAVE_HISTORIAL = 'gym_historial_ejercicios'
 
 export function guardarLocal(datos) {
   localStorage.setItem(CLAVE_PENDIENTE, JSON.stringify(datos))
@@ -105,4 +106,36 @@ export function esNuevoRecord(ejercicioId, pesoKg) {
   const records = obtenerRecords()
   const recordActual = records[ejercicioId]
   return !recordActual || pesoKg > recordActual.peso
+}
+
+export function guardarRegistroHistorial({ ejercicioId, nombreEjercicio, pesoKg, repeticiones }) {
+  if (!ejercicioId || !pesoKg) return
+  const historial = obtenerHistorialTodos()
+  const clave = String(ejercicioId)
+  const actual = historial[clave] || []
+  actual.push({
+    ejercicio_id: ejercicioId,
+    nombre: nombreEjercicio || '',
+    peso: parseFloat(pesoKg),
+    repeticiones: repeticiones ? parseInt(repeticiones, 10) : null,
+    fecha: new Date().toISOString(),
+  })
+  historial[clave] = actual
+  localStorage.setItem(CLAVE_HISTORIAL, JSON.stringify(historial))
+}
+
+export function obtenerHistorialTodos() {
+  const data = localStorage.getItem(CLAVE_HISTORIAL)
+  if (!data) return {}
+  try {
+    const parsed = JSON.parse(data)
+    return parsed && typeof parsed === 'object' ? parsed : {}
+  } catch {
+    return {}
+  }
+}
+
+export function obtenerHistorialEjercicio(ejercicioId) {
+  const historial = obtenerHistorialTodos()
+  return historial[String(ejercicioId)] || []
 }
