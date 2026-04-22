@@ -194,10 +194,15 @@ body.theme-dark {
   overscroll-behavior-y: none;
   scroll-snap-type: x mandatory;
   touch-action: pan-x;
+  scroll-behavior: smooth;
+  scroll-padding-inline: 0.25rem;
 }
 
 .lane-card {
   scroll-snap-align: start;
+  scroll-snap-stop: always;
+  flex: 0 0 auto;
+  touch-action: pan-x;
 }
 
 @media (hover: hover) and (pointer: fine) {
