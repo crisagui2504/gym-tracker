@@ -229,9 +229,9 @@ function TarjetaEjercicio({ ejercicio, unidad, onSeriesCompletas }) {
   )
 }
 
-export default function Entrenamiento({ rutina, onVolver, onFinalizar }) {
-  const [unidad, setUnidad] = useState('kg')
-  const [seriesGuardadas, setSeriesGuardadas] = useState({})
+export default function Entrenamiento({ rutina, onVolver, onFinalizar, onEstadoChange, estadoInicial }) {
+  const [unidad, setUnidad] = useState(estadoInicial?.unidad || 'kg')
+  const [seriesGuardadas, setSeriesGuardadas] = useState(estadoInicial?.seriesGuardadas || {})
   const [cargando, setCargando] = useState(true)
   const [ejercicios, setEjercicios] = useState([])
   const [prDetectado, setPrDetectado] = useState(null)
@@ -250,6 +250,11 @@ export default function Entrenamiento({ rutina, onVolver, onFinalizar }) {
 
     cargar()
   }, [rutina.id])
+
+  useEffect(() => {
+    if (!onEstadoChange) return
+    onEstadoChange({ unidad, seriesGuardadas })
+  }, [unidad, seriesGuardadas, onEstadoChange])
 
   const handleSeriesCompletas = useCallback((ejercicioId, nombreEjercicio, series) => {
     setSeriesGuardadas((prev) => ({ ...prev, [ejercicioId]: series }))

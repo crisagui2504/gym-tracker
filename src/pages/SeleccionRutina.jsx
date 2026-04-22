@@ -34,7 +34,7 @@ const ESTILOS = {
   },
 }
 
-export default function SeleccionRutina({ onSeleccionar, onDashboard }) {
+export default function SeleccionRutina({ onSeleccionar, onDashboard, sesionPausada, onReanudar, onDescartarSesion }) {
   const [racha, setRacha] = useState({ dias: 0, ultimaFecha: null })
 
   useEffect(() => {
@@ -69,6 +69,29 @@ export default function SeleccionRutina({ onSeleccionar, onDashboard }) {
             <p className="section-label">Elige tu rutina</p>
             <span className="chip">9 opciones</span>
           </div>
+
+          {sesionPausada && (
+            <div className="mb-4 rounded-2xl border border-emerald-300/30 bg-emerald-400/10 p-3">
+              <p className="text-sm font-bold text-emerald-100">Tienes una rutina en pausa</p>
+              <p className="mt-1 text-xs text-[var(--text-soft)]">
+                {sesionPausada.rutina.nombre} - Dia {sesionPausada.rutina.dia}
+              </p>
+              <div className="mt-3 flex gap-2">
+                <button
+                  onClick={onReanudar}
+                  className="btn-primary flex-1 rounded-xl px-3 py-2.5 text-sm"
+                >
+                  Reanudar
+                </button>
+                <button
+                  onClick={onDescartarSesion}
+                  className="btn-secondary rounded-xl px-3 py-2.5 text-sm"
+                >
+                  Descartar
+                </button>
+              </div>
+            </div>
+          )}
 
           <div className="mb-5 grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-3">
             {RUTINAS.map((rutina) => {

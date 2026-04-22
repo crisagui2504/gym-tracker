@@ -1,5 +1,6 @@
 const CLAVE_PENDIENTE = 'gym_entrenamiento_pendiente'
 const CLAVE_RECORDS = 'gym_records_personales'
+const CLAVE_SESION_ACTIVA = 'gym_sesion_activa'
 
 export function guardarLocal(datos) {
   localStorage.setItem(CLAVE_PENDIENTE, JSON.stringify(datos))
@@ -12,6 +13,34 @@ export function obtenerLocal() {
 
 export function limpiarLocal() {
   localStorage.removeItem(CLAVE_PENDIENTE)
+}
+
+export function guardarSesionActiva(sesion) {
+  localStorage.setItem(CLAVE_SESION_ACTIVA, JSON.stringify({
+    ...sesion,
+    actualizadaEn: new Date().toISOString(),
+  }))
+}
+
+export function obtenerSesionActiva() {
+  const raw = localStorage.getItem(CLAVE_SESION_ACTIVA)
+  if (!raw) return null
+  try {
+    const data = JSON.parse(raw)
+    if (!data?.rutina || !data?.rutina.id) return null
+    return {
+      rutina: data.rutina,
+      unidad: data.unidad || 'kg',
+      seriesGuardadas: data.seriesGuardadas || {},
+      actualizadaEn: data.actualizadaEn || null,
+    }
+  } catch {
+    return null
+  }
+}
+
+export function limpiarSesionActiva() {
+  localStorage.removeItem(CLAVE_SESION_ACTIVA)
 }
 
 export function guardarRecords(records) {
