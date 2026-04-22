@@ -25,6 +25,17 @@ html,
 body,
 #root {
   min-height: 100%;
+  width: 100%;
+}
+
+html,
+body {
+  background-color: var(--bg-0);
+}
+
+body,
+#root {
+  min-height: 100dvh;
 }
 
 body {
@@ -35,12 +46,17 @@ body {
     radial-gradient(1200px 600px at -15% -20%, rgba(88, 129, 255, 0.26), transparent 60%),
     radial-gradient(900px 520px at 120% 5%, rgba(36, 229, 185, 0.2), transparent 58%),
     linear-gradient(170deg, var(--bg-0), var(--bg-1));
+  overscroll-behavior-y: none;
 }
 
 .app-shell {
   position: relative;
-  min-height: 100vh;
+  min-height: 100dvh;
   overflow: hidden;
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
 }
 
 .app-shell::before {
