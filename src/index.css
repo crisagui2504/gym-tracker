@@ -186,6 +186,20 @@ body.theme-dark {
   scrollbar-width: none;
 }
 
+.lane-scroll {
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  overscroll-behavior-y: none;
+  scroll-snap-type: x mandatory;
+  touch-action: pan-x;
+}
+
+.lane-card {
+  scroll-snap-align: start;
+}
+
 @media (hover: hover) and (pointer: fine) {
   .hover-lift:hover {
     transform: translateY(-2px);

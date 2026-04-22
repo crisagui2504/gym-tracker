@@ -31,7 +31,14 @@ const LANE = {
   },
 }
 
-export default function SeleccionRutina({ onSeleccionar, onDashboard, sesionPausada, onReanudar, onDescartarSesion }) {
+export default function SeleccionRutina({
+  onSeleccionar,
+  onDashboard,
+  sesionPausada,
+  onReanudar,
+  onDescartarSesion,
+  estadoCicloRutinas,
+}) {
   const [racha, setRacha] = useState({ dias: 0, ultimaFecha: null })
   const [temaOscuro, setTemaOscuro] = useState(() => localStorage.getItem('gym_theme') === 'dark')
 
@@ -57,6 +64,9 @@ export default function SeleccionRutina({ onSeleccionar, onDashboard, sesionPaus
     pull: RUTINAS.filter((r) => r.tipo === 'pull'),
     leg: RUTINAS.filter((r) => r.tipo === 'leg'),
   }
+  const completadasHoy = estadoCicloRutinas?.completadasHoy || []
+  const siguienteId = estadoCicloRutinas?.nextRutinaId
+  const siguienteRutina = RUTINAS.find((r) => r.id === siguienteId)
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-6xl flex-col gap-6 px-5 pb-[120px] pt-[88px] lg:px-8 lg:pt-[96px]">
@@ -66,8 +76,7 @@ export default function SeleccionRutina({ onSeleccionar, onDashboard, sesionPaus
         className="theme-toggle fixed left-4 top-4 z-40 flex items-center gap-2"
         aria-label="Cambiar tema"
       >
-        <span>{temaOscuro ? '☀' : '🌙'}</span>
-        <span className="hidden sm:inline">{temaOscuro ? 'Light' : 'Dark'}</span>
+        <span>{temaOscuro ? 'Light' : 'Dark'}</span>
       </button>
 
       <section className="flex flex-col gap-3">
@@ -77,12 +86,17 @@ export default function SeleccionRutina({ onSeleccionar, onDashboard, sesionPaus
             <h1 className="text-[30px] font-bold leading-tight tracking-tight text-[var(--on-surface)]">Gym Tracker</h1>
           </div>
           <div className="flex items-center gap-4">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--secondary-fixed)] text-lg">🔥</div>
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--secondary-fixed)] text-sm font-semibold">R</div>
             <div>
               <p className="text-2xl font-bold text-[var(--on-surface)]">{racha.dias} Dias</p>
               <p className="text-sm text-[var(--on-surface-variant)]">Racha actual</p>
             </div>
           </div>
+          {siguienteRutina && (
+            <p className="mt-3 text-xs text-[var(--on-surface-variant)]">
+              Siguiente recomendada: <strong>{siguienteRutina.nombre} Dia {siguienteRutina.dia}</strong>
+            </p>
+          )}
         </div>
       </section>
 
@@ -106,18 +120,26 @@ export default function SeleccionRutina({ onSeleccionar, onDashboard, sesionPaus
               <h3 className="text-2xl font-semibold text-[var(--on-surface)]">{LANE[tipo].title}</h3>
               <span className="chip">{porTipo[tipo].length} dias</span>
             </div>
-            <div className="hide-scrollbar flex snap-x gap-4 overflow-x-auto pb-1 lg:grid lg:grid-cols-1 lg:overflow-visible">
-              {porTipo[tipo].map((rutina) => (
-                <button
-                  key={rutina.id}
-                  onClick={() => onSeleccionar(rutina)}
-                  className={`hover-lift min-h-[160px] min-w-[220px] snap-start rounded-xl p-5 text-left transition duration-200 active:scale-[0.98] lg:min-w-0 ${LANE[tipo].card}`}
-                >
-                  <span className={`mb-3 inline-block rounded-full px-3 py-1 text-xs font-semibold ${LANE[tipo].badge}`}>Dia {rutina.dia}</span>
-                  <h4 className="text-2xl font-semibold">{rutina.nombre}</h4>
-                  <p className="mt-2 text-sm opacity-80">Iniciar entrenamiento</p>
-                </button>
-              ))}
+            <div className="lane-scroll hide-scrollbar flex gap-4 pb-1 lg:grid lg:grid-cols-1 lg:overflow-visible lg:overscroll-auto lg:touch-auto">
+              {porTipo[tipo].map((rutina) => {
+                const completada = completadasHoy.includes(rutina.id)
+                const esSiguiente = rutina.id === siguienteId
+                return (
+                  <button
+                    key={rutina.id}
+                    onClick={() => onSeleccionar(rutina)}
+                    className={`lane-card hover-lift min-h-[160px] w-[84%] min-w-[260px] rounded-xl p-5 text-left transition duration-200 active:scale-[0.98] sm:min-w-[280px] lg:min-w-0 lg:w-auto ${LANE[tipo].card} ${completada ? 'opacity-55 grayscale-[0.12]' : ''} ${esSiguiente ? 'ring-2 ring-[var(--primary)]' : ''}`}
+                  >
+                    <div className="mb-3 flex items-center gap-2">
+                      <span className={`inline-block rounded-full px-3 py-1 text-xs font-semibold ${LANE[tipo].badge}`}>Dia {rutina.dia}</span>
+                      {esSiguiente && <span className="chip border-[var(--primary)] text-[var(--primary)]">Sigue</span>}
+                      {completada && <span className="chip">Hecha hoy</span>}
+                    </div>
+                    <h4 className="text-2xl font-semibold">{rutina.nombre}</h4>
+                    <p className="mt-2 text-sm opacity-80">Iniciar entrenamiento</p>
+                  </button>
+                )
+              })}
             </div>
           </section>
         ))}

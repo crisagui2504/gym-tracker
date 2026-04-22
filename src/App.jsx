@@ -2,7 +2,15 @@ import { useEffect, useState } from 'react'
 import SeleccionRutina from './pages/SeleccionRutina'
 import Entrenamiento from './pages/Entrenamiento'
 import Dashboard from './pages/Dashboard'
-import { guardarLocal, limpiarLocal, guardarSesionActiva, obtenerSesionActiva, limpiarSesionActiva } from './services/storage'
+import {
+  guardarLocal,
+  limpiarLocal,
+  guardarSesionActiva,
+  obtenerSesionActiva,
+  limpiarSesionActiva,
+  obtenerEstadoCicloRutinas,
+  marcarRutinaCompletada,
+} from './services/storage'
 import { guardarEntrenamiento, actualizarRachaServidor } from './services/api'
 
 function App() {
@@ -10,10 +18,12 @@ function App() {
   const [rutinaActiva, setRutinaActiva] = useState(null)
   const [estadoInicialEntrenamiento, setEstadoInicialEntrenamiento] = useState(null)
   const [sesionPausada, setSesionPausada] = useState(null)
+  const [estadoCicloRutinas, setEstadoCicloRutinas] = useState({ nextRutinaId: 1, completadasHoy: [] })
 
   useEffect(() => {
     const sesion = obtenerSesionActiva()
     if (sesion) setSesionPausada(sesion)
+    setEstadoCicloRutinas(obtenerEstadoCicloRutinas())
   }, [])
 
   const handleSeleccionar = (rutina) => {
@@ -47,6 +57,8 @@ function App() {
       limpiarLocal()
       alert('Entrenamiento guardado.')
     }
+    const nuevoEstadoCiclo = marcarRutinaCompletada(rutinaActiva.id)
+    setEstadoCicloRutinas(nuevoEstadoCiclo)
     limpiarSesionActiva()
     setPantalla('seleccion')
     setRutinaActiva(null)
@@ -77,6 +89,7 @@ function App() {
           sesionPausada={sesionPausada}
           onReanudar={handleReanudar}
           onDescartarSesion={handleDescartarSesion}
+          estadoCicloRutinas={estadoCicloRutinas}
         />
       )}
       {pantalla === 'entrenamiento' && (

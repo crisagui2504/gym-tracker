@@ -2,6 +2,16 @@ const CLAVE_PENDIENTE = 'gym_entrenamiento_pendiente'
 const CLAVE_RECORDS = 'gym_records_personales'
 const CLAVE_SESION_ACTIVA = 'gym_sesion_activa'
 const CLAVE_HISTORIAL = 'gym_historial_ejercicios'
+const CLAVE_CICLO_RUTINAS = 'gym_ciclo_rutinas'
+const ORDEN_CICLO_RUTINAS = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+
+function fechaLocalISO() {
+  const ahora = new Date()
+  const y = ahora.getFullYear()
+  const m = String(ahora.getMonth() + 1).padStart(2, '0')
+  const d = String(ahora.getDate()).padStart(2, '0')
+  return `${y}-${m}-${d}`
+}
 
 export function guardarLocal(datos) {
   localStorage.setItem(CLAVE_PENDIENTE, JSON.stringify(datos))
@@ -138,4 +148,45 @@ export function obtenerHistorialTodos() {
 export function obtenerHistorialEjercicio(ejercicioId) {
   const historial = obtenerHistorialTodos()
   return historial[String(ejercicioId)] || []
+}
+
+export function obtenerEstadoCicloRutinas() {
+  const today = fechaLocalISO()
+  const raw = localStorage.getItem(CLAVE_CICLO_RUTINAS)
+  if (!raw) {
+    return { nextRutinaId: ORDEN_CICLO_RUTINAS[0], completadasHoy: [], ultimaFecha: today }
+  }
+  try {
+    const parsed = JSON.parse(raw)
+    const mismaFecha = parsed.ultimaFecha === today
+    return {
+      nextRutinaId: ORDEN_CICLO_RUTINAS.includes(parsed.nextRutinaId) ? parsed.nextRutinaId : ORDEN_CICLO_RUTINAS[0],
+      completadasHoy: mismaFecha && Array.isArray(parsed.completadasHoy) ? parsed.completadasHoy : [],
+      ultimaFecha: mismaFecha ? parsed.ultimaFecha : today,
+      ultimaRutinaId: parsed.ultimaRutinaId || null,
+    }
+  } catch {
+    return { nextRutinaId: ORDEN_CICLO_RUTINAS[0], completadasHoy: [], ultimaFecha: today }
+  }
+}
+
+export function marcarRutinaCompletada(rutinaId) {
+  if (!rutinaId) return obtenerEstadoCicloRutinas()
+
+  const today = fechaLocalISO()
+  const estado = obtenerEstadoCicloRutinas()
+  const completadas = estado.ultimaFecha === today ? [...estado.completadasHoy] : []
+  if (!completadas.includes(rutinaId)) completadas.push(rutinaId)
+
+  const idx = ORDEN_CICLO_RUTINAS.indexOf(rutinaId)
+  const nextRutinaId = idx >= 0 ? ORDEN_CICLO_RUTINAS[(idx + 1) % ORDEN_CICLO_RUTINAS.length] : estado.nextRutinaId
+
+  const nuevo = {
+    nextRutinaId,
+    completadasHoy: completadas,
+    ultimaFecha: today,
+    ultimaRutinaId: rutinaId,
+  }
+  localStorage.setItem(CLAVE_CICLO_RUTINAS, JSON.stringify(nuevo))
+  return nuevo
 }
