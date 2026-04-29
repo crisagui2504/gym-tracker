@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { getRutina } from '../services/api'
-import { actualizarRecord, esNuevoRecord, obtenerRecords, guardarRegistroHistorial } from '../services/storage'
+import { actualizarRecord, esNuevoRecord, obtenerRecords, guardarRegistroHistorial, calcularSugerenciaProgresion } from '../services/storage'
 import ConfettiPR from '../components/ConfettiPR'
 import ModalEjercicio from '../components/ModalEjercicio'
 
@@ -146,7 +146,7 @@ function generarCalentamiento(prKg) {
   return [{ porcentaje: 0.5, reps: 10 }, { porcentaje: 0.75, reps: 5 }, { porcentaje: 0.875, reps: 3 }]
 }
 
-function TarjetaEjercicio({ ejercicio, unidad, onSeriesCompletas, recordsMap }) {
+function TarjetaEjercicio({ ejercicio, unidad, onSeriesCompletas, recordsMap, ejerciciosEnRutina, onSwap }) {
   const [series, setSeries] = useState([])
   const [modalAbierto, setModalAbierto] = useState(false)
   const [ejercicioActual, setEjercicioActual] = useState(ejercicio)
@@ -173,6 +173,10 @@ function TarjetaEjercicio({ ejercicio, unidad, onSeriesCompletas, recordsMap }) 
 
   const completado = series.length >= numSeriesMin
   const prKg = recordsMap?.[ejercicioActual.ejercicio_id]?.peso || null
+  const sugerenciaProgresion = calcularSugerenciaProgresion(
+    ejercicioActual.ejercicio_id,
+    ejercicioActual.reps_objetivo
+  )
   const sugerencias = generarCalentamiento(prKg).map((paso) => {
     const kg = redondearPeso(prKg * paso.porcentaje)
     return unidad === 'lbs'
@@ -207,6 +211,26 @@ function TarjetaEjercicio({ ejercicio, unidad, onSeriesCompletas, recordsMap }) 
           </div>
         )}
 
+        {sugerenciaProgresion && series.length === 0 && (
+          <div className={`mb-3 rounded-xl border p-3 ${
+            sugerenciaProgresion.tipo === 'subir'
+              ? 'border-[#b8d9c2] bg-[#eaf6ee]'
+              : sugerenciaProgresion.tipo === 'mantener'
+              ? 'border-[#e6cfab] bg-[#fff4e5]'
+              : 'border-[var(--surface-container-highest)] bg-[var(--surface)]'
+          }`}>
+            <p className="section-label mb-1">
+              {sugerenciaProgresion.tipo === 'subir' ? '↑ Sube el peso hoy' :
+               sugerenciaProgresion.tipo === 'mantener' ? '→ Mantén el peso' : '= Igual que antes'}
+            </p>
+            <p className="text-sm font-semibold">
+              {sugerenciaProgresion.peso} kg
+              {sugerenciaProgresion.repsObjetivo ? ` × ${sugerenciaProgresion.repsObjetivo} reps` : ''}
+            </p>
+            <p className="mt-0.5 text-xs text-[var(--on-surface-variant)]">{sugerenciaProgresion.mensaje}</p>
+          </div>
+        )}
+
         {Array.from({ length: numSeriesMin }).map((_, i) => (
           <FilaSerie
             key={i}
@@ -226,11 +250,17 @@ function TarjetaEjercicio({ ejercicio, unidad, onSeriesCompletas, recordsMap }) 
         <ModalEjercicio
           ejercicio={ejercicioActual}
           onCerrar={() => setModalAbierto(false)}
-          onAlternar={(alternativa) => {
-            setEjercicioActual(alternativa)
-            setSeries([])
+          onAlternar={(alternativa, opciones) => {
+            if (opciones?.swap && opciones?.posicionDuplicado !== -1) {
+              // Swap: la alternativa toma este lugar, este ejercicio va al lugar del duplicado
+              onSwap(ejercicioActual, alternativa, opciones.posicionDuplicado)
+            } else {
+              setEjercicioActual(alternativa)
+              setSeries([])
+            }
             setModalAbierto(false)
           }}
+          ejerciciosEnRutina={ejerciciosEnRutina}
         />
       )}
     </>
@@ -279,6 +309,19 @@ export default function Entrenamiento({ rutina, onVolver, onFinalizar, onEstadoC
     }
   }, [])
 
+  const handleSwap = useCallback((ejercicioActual, alternativa, posicionDuplicado) => {
+    setEjercicios(prev => {
+      const nuevos = [...prev]
+      const posActual = nuevos.findIndex(e => e.ejercicio_id === ejercicioActual.ejercicio_id)
+      if (posActual === -1) return prev
+      // Intercambiar
+      const temp = { ...nuevos[posActual] }
+      nuevos[posActual] = { ...nuevos[posicionDuplicado] }
+      nuevos[posicionDuplicado] = temp
+      return nuevos
+    })
+  }, [])
+
   const completados = Object.keys(seriesGuardadas).length
   const total = ejercicios.length
   const porcentaje = total > 0 ? (completados / total) * 100 : 0
@@ -307,7 +350,15 @@ export default function Entrenamiento({ rutina, onVolver, onFinalizar, onEstadoC
           <div className="py-16 text-center text-sm text-[var(--on-surface-variant)]">Sin ejercicios.</div>
         ) : (
           ejercicios.map((ej) => (
-            <TarjetaEjercicio key={ej.ejercicio_id} ejercicio={ej} unidad={unidad} onSeriesCompletas={handleSeriesCompletas} recordsMap={recordsMap} />
+            <TarjetaEjercicio
+              key={ej.ejercicio_id}
+              ejercicio={ej}
+              unidad={unidad}
+              onSeriesCompletas={handleSeriesCompletas}
+              recordsMap={recordsMap}
+              ejerciciosEnRutina={ejercicios}
+              onSwap={handleSwap}
+            />
           ))
         )}
 

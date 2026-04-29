@@ -10,6 +10,8 @@ import {
   limpiarSesionActiva,
   obtenerEstadoCicloRutinas,
   marcarRutinaCompletada,
+  registrarDeudaMuscular,
+  saldarDeudaMuscular,
 } from './services/storage'
 import { guardarEntrenamiento, actualizarRachaServidor } from './services/api'
 
@@ -48,6 +50,19 @@ function App() {
   }
 
   const handleFinalizar = async (seriesGuardadas) => {
+    const gruposCompletados = new Set()
+    Object.keys(seriesGuardadas).forEach(ejercicioId => {
+      const ej = rutinaActiva.ejercicios?.find(e => e.ejercicio_id === parseInt(ejercicioId))
+      if (ej) gruposCompletados.add(ej.grupo_muscular)
+    })
+    // Grupos que estaban en la rutina pero no se completaron
+    rutinaActiva.ejercicios?.forEach(ej => {
+      if (!gruposCompletados.has(ej.grupo_muscular)) {
+        registrarDeudaMuscular(ej.grupo_muscular)
+      } else {
+        saldarDeudaMuscular(ej.grupo_muscular)
+      }
+    })
     await actualizarRachaServidor()
     const resultado = await guardarEntrenamiento(rutinaActiva.id, seriesGuardadas)
     if (resultado.offline) {

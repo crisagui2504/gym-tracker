@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { getRachaServidor } from '../services/api'
+import { obtenerDeudasMusculares } from '../services/storage'
 
 const RUTINAS = [
   { id: 1, nombre: 'Push', dia: 1, tipo: 'push' },
@@ -138,9 +139,14 @@ export default function SeleccionRutina({
 }) {
   const [racha, setRacha] = useState({ dias: 0, ultimaFecha: null })
   const [temaOscuro, setTemaOscuro] = useState(() => localStorage.getItem('gym_theme') === 'dark')
+  const [deudasMusculares, setDeudasMusculares] = useState([])
 
   useEffect(() => {
     getRachaServidor().then((data) => { if (data) setRacha(data) })
+  }, [])
+
+  useEffect(() => {
+    setDeudasMusculares(obtenerDeudasMusculares())
   }, [])
 
   useEffect(() => {
@@ -207,6 +213,22 @@ export default function SeleccionRutina({
           <div className="mt-3 grid grid-cols-2 gap-2">
             <button onClick={onReanudar} className="btn-primary rounded-xl px-3 py-2.5 text-sm">Reanudar</button>
             <button onClick={onDescartarSesion} className="btn-secondary rounded-xl px-3 py-2.5 text-sm">Descartar</button>
+          </div>
+        </div>
+      )}
+
+      {deudasMusculares.length > 0 && (
+        <div className="mx-4 rounded-2xl border border-[#e6cfab] bg-[#fff4e5] p-4">
+          <p className="section-label mb-1 text-[#7a5a33]">Grupos musculares pendientes</p>
+          <p className="mb-2 text-xs text-[#7a5a33]">
+            No trabajaste estos grupos en tu última sesión:
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {deudasMusculares.map(grupo => (
+              <span key={grupo} className="chip border-[#e8ceb1] bg-[#ffead2] text-[#6f5130]">
+                {grupo}
+              </span>
+            ))}
           </div>
         </div>
       )}

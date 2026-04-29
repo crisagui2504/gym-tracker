@@ -3,6 +3,7 @@ const CLAVE_RECORDS = 'gym_records_personales'
 const CLAVE_SESION_ACTIVA = 'gym_sesion_activa'
 const CLAVE_HISTORIAL = 'gym_historial_ejercicios'
 const CLAVE_CICLO_RUTINAS = 'gym_ciclo_rutinas'
+const CLAVE_DEUDA_MUSCULAR = 'gym_deuda_muscular'
 const ORDEN_CICLO_RUTINAS = [1, 2, 3, 4, 5, 6, 7, 8, 9]
 
 function fechaLocalISO() {
@@ -189,4 +190,114 @@ export function marcarRutinaCompletada(rutinaId) {
   }
   localStorage.setItem(CLAVE_CICLO_RUTINAS, JSON.stringify(nuevo))
   return nuevo
+}
+
+export function obtenerUltimasSeries(ejercicioId) {
+  const historial = obtenerHistorialEjercicio(ejercicioId)
+  if (!historial.length) return null
+
+  // Agrupar por fecha y tomar la más reciente
+  const porFecha = {}
+  historial.forEach((entry) => {
+    const fecha = entry.fecha.split('T')[0]
+    if (!porFecha[fecha]) porFecha[fecha] = []
+    porFecha[fecha].push(entry)
+  })
+
+  const fechas = Object.keys(porFecha).sort().reverse()
+  if (!fechas.length) return null
+
+  return porFecha[fechas[0]]
+}
+
+export function calcularSugerenciaProgresion(ejercicioId, repsObjetivo) {
+  const ultimasSeries = obtenerUltimasSeries(ejercicioId)
+  if (!ultimasSeries || !ultimasSeries.length) return null
+
+  // Parsear rango de reps objetivo (ej: "6-8" → min=6, max=8)
+  const partes = String(repsObjetivo).split('-')
+  const repsMin = parseInt(partes[0], 10)
+  const repsMax = parseInt(partes[partes.length - 1], 10)
+
+  const pesoBase = ultimasSeries[0].peso
+  const todasAlMax = ultimasSeries.every(
+    (s) => s.repeticiones !== null && s.repeticiones >= repsMax
+  )
+  const hayEstancamiento = ultimasSeries.some(
+    (s) => s.repeticiones !== null && s.repeticiones < repsMin
+  )
+
+  if (todasAlMax) {
+    // Lograste el máximo en todas → sube 2.5 kg, vuelve al mínimo de reps
+    return {
+      peso: redondearPeso(pesoBase + 2.5),
+      repsObjetivo: repsMin,
+      mensaje: `+2.5 kg respecto a tu sesión anterior`,
+      tipo: 'subir',
+    }
+  }
+
+  if (hayEstancamiento) {
+    // No alcanzaste el mínimo → mismo peso, intenta una rep más
+    const mejorReps = Math.max(...ultimasSeries.map((s) => s.repeticiones || 0))
+    return {
+      peso: redondearPeso(pesoBase),
+      repsObjetivo: Math.min(mejorReps + 1, repsMax),
+      mensaje: `Mismo peso, intenta ${Math.min(mejorReps + 1, repsMax)} reps`,
+      tipo: 'mantener',
+    }
+  }
+
+  // Progreso normal → mismo peso y reps
+  return {
+    peso: redondearPeso(pesoBase),
+    repsObjetivo: null,
+    mensaje: `Igual que la semana pasada`,
+    tipo: 'igual',
+  }
+}
+
+function redondearPeso(valor, paso = 2.5) {
+  return Math.max(paso, Math.round(valor / paso) * paso)
+}
+
+export function detectarFatigaYReducirSeries(seriesCompletadas, seriesObjetivo) {
+  if (!seriesCompletadas || seriesCompletadas.length < 2) return null
+
+  const ultimasSeries = obtenerUltimasSeries(
+    seriesCompletadas[0]?.ejercicioId
+  )
+  if (!ultimasSeries) return null
+
+  const pesoPromedioPasado = ultimasSeries.reduce((s, e) => s + e.peso, 0) / ultimasSeries.length
+  const pesoActual = seriesCompletadas[seriesCompletadas.length - 1]?.peso_kg || 0
+
+  const caida = (pesoPromedioPasado - pesoActual) / pesoPromedioPasado
+  if (caida > 0.15) {
+    // Cayó más del 15% → sugiere reducir series
+    const seriesReducidas = Math.max(2, parseInt(seriesObjetivo, 10) - 1)
+    return {
+      sugerencia: seriesReducidas,
+      mensaje: `Fatiga detectada. Considera reducir a ${seriesReducidas} series en los siguientes ejercicios.`,
+    }
+  }
+  return null
+}
+
+export function registrarDeudaMuscular(grupoMuscular) {
+  const deudas = obtenerDeudasMusculares()
+  if (!deudas.includes(grupoMuscular)) {
+    deudas.push(grupoMuscular)
+    localStorage.setItem(CLAVE_DEUDA_MUSCULAR, JSON.stringify(deudas))
+  }
+}
+
+export function saldarDeudaMuscular(grupoMuscular) {
+  const deudas = obtenerDeudasMusculares().filter(g => g !== grupoMuscular)
+  localStorage.setItem(CLAVE_DEUDA_MUSCULAR, JSON.stringify(deudas))
+}
+
+export function obtenerDeudasMusculares() {
+  const raw = localStorage.getItem(CLAVE_DEUDA_MUSCULAR)
+  try { return raw ? JSON.parse(raw) : [] } catch { return [] }
 }
