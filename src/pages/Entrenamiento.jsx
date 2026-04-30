@@ -3,6 +3,7 @@ import { getRutina } from '../services/api'
 import { actualizarRecord, esNuevoRecord, obtenerRecords, guardarRegistroHistorial, calcularSugerenciaProgresion } from '../services/storage'
 import ConfettiPR from '../components/ConfettiPR'
 import ModalEjercicio from '../components/ModalEjercicio'
+import CalentamientoPrevio from '../components/CalentamientoPrevio'
 
 function Cronometro({ segundos, onTerminar }) {
   const [restante, setRestante] = useState(segundos)
@@ -164,11 +165,13 @@ function TarjetaEjercicio({ ejercicio, unidad, onSeriesCompletas, recordsMap, ej
     (datosSerie) => {
       setSeries((prev) => {
         const nuevas = [...prev, datosSerie]
-        if (nuevas.length >= maxSeries) onSeriesCompletas(ejercicioActual.ejercicio_id, ejercicioActual.nombre, nuevas)
+        if (nuevas.length >= numSeriesMin) {
+          onSeriesCompletas(ejercicioActual.ejercicio_id, ejercicioActual.nombre, nuevas)
+        }
         return nuevas
       })
     },
-    [maxSeries, ejercicioActual.ejercicio_id, ejercicioActual.nombre, onSeriesCompletas],
+    [numSeriesMin, ejercicioActual.ejercicio_id, ejercicioActual.nombre, onSeriesCompletas],
   )
 
   const completado = series.length >= numSeriesMin
@@ -349,17 +352,20 @@ export default function Entrenamiento({ rutina, onVolver, onFinalizar, onEstadoC
         ) : ejercicios.length === 0 ? (
           <div className="py-16 text-center text-sm text-[var(--on-surface-variant)]">Sin ejercicios.</div>
         ) : (
-          ejercicios.map((ej) => (
-            <TarjetaEjercicio
-              key={ej.ejercicio_id}
-              ejercicio={ej}
-              unidad={unidad}
-              onSeriesCompletas={handleSeriesCompletas}
-              recordsMap={recordsMap}
-              ejerciciosEnRutina={ejercicios}
-              onSwap={handleSwap}
-            />
-          ))
+          <>
+            <CalentamientoPrevio tipo={rutina.tipo} />
+            {ejercicios.map((ej) => (
+              <TarjetaEjercicio
+                key={ej.ejercicio_id}
+                ejercicio={ej}
+                unidad={unidad}
+                onSeriesCompletas={handleSeriesCompletas}
+                recordsMap={recordsMap}
+                ejerciciosEnRutina={ejercicios}
+                onSwap={handleSwap}
+              />
+            ))}
+          </>
         )}
 
         {completados > 0 && (
