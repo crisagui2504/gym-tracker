@@ -61,7 +61,7 @@ export async function ejecutarMigracionRutinas(token, exerciseMap = WGER_EXERCIS
       console.log(`Creando Dia para Rutina ${key}...`)
 
       const day = await wgerPost('/day/', {
-        routine: workoutId, // <--- AQUÍ ESTÁ LA CORRECCIÓN MÁGICA
+        routine: workoutId, 
         description: `Dia ${key}`,
         day: [],
       }, token.trim())
@@ -79,29 +79,31 @@ export async function ejecutarMigracionRutinas(token, exerciseMap = WGER_EXERCIS
         const seriesInt = parseInt(ej.series_objetivo, 10) || 3
         const repsString = String(ej.reps_objetivo || '8')
 
-        const setResponse = await wgerPost('/set/', {
+        // ¡CORRECCIÓN AQUÍ! WGER ahora usa /slot/ en lugar de /set/
+        const slotResponse = await wgerPost('/slot/', {
           day: dayId,
           order: ej.orden,
           sets: seriesInt, 
         }, token.trim())
 
-        const setId = setResponse.id
+        const slotId = slotResponse.id
 
-        await wgerPost('/setting/', {
-            set: setId,
+        // ¡CORRECCIÓN AQUÍ! WGER ahora usa /slot-entry/ en lugar de /setting/
+        await wgerPost('/slot-entry/', {
+            slot: slotId,
             exercise: wgerExerciseId,
             reps: repsString
         }, token.trim())
 
-        console.log(`  - Ejercicio anadido: ${ej.nombre}`)
+        console.log(`  - Ejercicio añadido: ${ej.nombre}`)
         await esperar(PAUSA_MS)
       }
     }
 
-    console.log('RUTINAS MIGRADAS EXITOSAMENTE. Revisa tu app de iOS.')
+    console.log('🎉 RUTINAS MIGRADAS EXITOSAMENTE. Revisa tu app de iOS.')
     return true
   } catch (error) {
-    console.error('Fallo la migracion de rutinas:', error.message)
+    console.error('❌ Fallo la migracion de rutinas:', error.message)
     return false
   }
 }
