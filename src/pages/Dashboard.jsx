@@ -88,7 +88,7 @@ export default function Dashboard({ onVolver }) {
           <h2 className="text-2xl font-semibold">Mi progreso</h2>
         </div>
 
-        {import.meta.env.DEV && <BotonMigracionWger />}
+        <BotonMigracionWger />
 
         {!lista.length ? (
           <div className="rounded-xl border border-[var(--surface-container-highest)] bg-[var(--surface)] p-8 text-center">
