@@ -19,15 +19,12 @@ async function wgerPost(endpoint, payload, token) {
     body: JSON.stringify(payload),
   })
 
-  // Manejo de errores corregido (evita el "body stream already read")
   if (!response.ok) {
     const errorText = await response.text()
     let detalle = errorText
     try {
       detalle = JSON.parse(errorText)
-    } catch (e) {
-      // Si no es JSON, se queda como texto plano
-    }
+    } catch (e) {}
     throw new Error(`Error en ${endpoint}: ${typeof detalle === 'object' ? JSON.stringify(detalle) : detalle}`)
   }
 
@@ -45,10 +42,18 @@ export async function ejecutarMigracionRutinas(token, exerciseMap = WGER_EXERCIS
   try {
     console.log('Creando Entrenamiento maestro...')
     
-    // ¡CORRECCIÓN!: El endpoint en WGER es /routine/
+    // 1. Generamos fechas obligatorias para WGER (Inicia hoy, termina en 1 año)
+    const hoy = new Date()
+    const fechaInicio = hoy.toISOString().split('T')[0]
+    hoy.setFullYear(hoy.getFullYear() + 1) // Le sumamos un año al fin
+    const fechaFin = hoy.toISOString().split('T')[0]
+
+    // 2. Enviamos la rutina con start y end
     const workout = await wgerPost('/routine/', {
       name: 'Ciclo de 9 Dias (Migrado)',
       description: 'Rutina importada automaticamente desde la Web App',
+      start: fechaInicio,
+      end: fechaFin
     }, token.trim())
 
     const workoutId = workout.id
@@ -58,7 +63,7 @@ export async function ejecutarMigracionRutinas(token, exerciseMap = WGER_EXERCIS
       console.log(`Creando Dia para Rutina ${key}...`)
 
       const day = await wgerPost('/day/', {
-        training: workoutId, // En WGER, la llave foránea se llama "training"
+        training: workoutId,
         description: `Dia ${key}`,
         day: [],
       }, token.trim())
@@ -76,7 +81,6 @@ export async function ejecutarMigracionRutinas(token, exerciseMap = WGER_EXERCIS
         const seriesInt = parseInt(ej.series_objetivo, 10) || 3
         const repsString = String(ej.reps_objetivo || '8')
 
-        // 1. Crear el Set (agrupador)
         const setResponse = await wgerPost('/set/', {
           day: dayId,
           order: ej.orden,
@@ -85,7 +89,6 @@ export async function ejecutarMigracionRutinas(token, exerciseMap = WGER_EXERCIS
 
         const setId = setResponse.id
 
-        // 2. Crear el Setting (donde va el ejercicio)
         await wgerPost('/setting/', {
             set: setId,
             exercise: wgerExerciseId,
