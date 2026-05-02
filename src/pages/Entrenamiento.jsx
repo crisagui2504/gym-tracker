@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { getRutina } from '../services/api'
-import { actualizarRecord, esNuevoRecord, guardarRegistroHistorial, calcularSugerenciaProgresion } from '../services/storage'
+import { TODOS_EJERCICIOS } from '../services/rutinasLocales'
+import { actualizarRecord, esNuevoRecord, obtenerRecords, guardarRegistroHistorial, calcularSugerenciaProgresion, calcularPesoTransferencia } from '../services/storage'
 import ConfettiPR from '../components/ConfettiPR'
 import ModalEjercicio from '../components/ModalEjercicio'
 import CalentamientoPrevio from '../components/CalentamientoPrevio'
@@ -137,7 +138,7 @@ function FilaSerie({ numSerie, unidad, onCompletar, completada, descansoSegundos
   )
 }
 
-function TarjetaEjercicio({ ejercicio, unidad, onSeriesCompletas, ejerciciosEnRutina, onSwap }) {
+function TarjetaEjercicio({ ejercicio, unidad, recordsMap, onSeriesCompletas, ejerciciosEnRutina, onSwap }) {
   const [series, setSeries] = useState([])
   const [modalAbierto, setModalAbierto] = useState(false)
   const [ejercicioActual, setEjercicioActual] = useState(ejercicio)
@@ -169,6 +170,9 @@ function TarjetaEjercicio({ ejercicio, unidad, onSeriesCompletas, ejerciciosEnRu
     ejercicioActual.ejercicio_id,
     ejercicioActual.reps_objetivo
   )
+  const transferenciaFuerza = !sugerenciaProgresion
+    ? calcularPesoTransferencia(ejercicioActual.ejercicio_id, TODOS_EJERCICIOS, recordsMap)
+    : null
 
   return (
     <>
@@ -201,6 +205,20 @@ function TarjetaEjercicio({ ejercicio, unidad, onSeriesCompletas, ejerciciosEnRu
               {sugerenciaProgresion.repsObjetivo ? ` × ${sugerenciaProgresion.repsObjetivo} reps` : ''}
             </p>
             <p className="mt-0.5 text-xs text-[var(--on-surface-variant)]">{sugerenciaProgresion.mensaje}</p>
+          </div>
+        )}
+
+        {transferenciaFuerza && series.length === 0 && (
+          <div className="mb-3 rounded-xl border border-[#c5d9e8] bg-[#eaf4fb] p-3">
+            <p className="section-label mb-1 text-[#2f5c7a]">Sugerencia inteligente</p>
+            <p className="text-lg font-bold text-[#1a3d52]">{transferenciaFuerza.peso} kg</p>
+            <p className="mt-0.5 text-xs text-[#4a7a96]">
+              Basado en tu {transferenciaFuerza.anclaName} ({transferenciaFuerza.prAncla} kg)
+              {' '}· coef. {transferenciaFuerza.coeficiente} · -8% novedad
+            </p>
+            <p className="mt-1 text-[10px] text-[#6a94aa]">
+              Primera vez en este ejercicio. Ajusta segun sientas.
+            </p>
           </div>
         )}
 
@@ -246,6 +264,7 @@ export default function Entrenamiento({ rutina, onVolver, onFinalizar, onEstadoC
   const [cargando, setCargando] = useState(true)
   const [ejercicios, setEjercicios] = useState([])
   const [prDetectado, setPrDetectado] = useState(null)
+  const [recordsMap, setRecordsMap] = useState({})
 
   useEffect(() => {
     async function cargar() {
@@ -266,12 +285,17 @@ export default function Entrenamiento({ rutina, onVolver, onFinalizar, onEstadoC
     onEstadoChange({ unidad, seriesGuardadas })
   }, [unidad, seriesGuardadas, onEstadoChange])
 
+  useEffect(() => {
+    setRecordsMap(obtenerRecords())
+  }, [])
+
   const handleSeriesCompletas = useCallback((ejercicioId, nombreEjercicio, series) => {
     setSeriesGuardadas((prev) => ({ ...prev, [ejercicioId]: series }))
     const mejorSerie = series.reduce((max, s) => (s.peso_kg > max.peso_kg ? s : max), series[0])
     guardarRegistroHistorial({ ejercicioId, nombreEjercicio, pesoKg: mejorSerie.peso_kg, repeticiones: mejorSerie.repeticiones })
     if (esNuevoRecord(ejercicioId, mejorSerie.peso_kg)) {
       actualizarRecord(ejercicioId, nombreEjercicio, mejorSerie.peso_kg)
+      setRecordsMap(obtenerRecords())
       setPrDetectado({ nombre: nombreEjercicio, peso: mejorSerie.peso_kg })
     }
   }, [])
@@ -323,6 +347,7 @@ export default function Entrenamiento({ rutina, onVolver, onFinalizar, onEstadoC
                 key={ej.ejercicio_id}
                 ejercicio={ej}
                 unidad={unidad}
+                recordsMap={recordsMap}
                 onSeriesCompletas={handleSeriesCompletas}
                 ejerciciosEnRutina={ejercicios}
                 onSwap={handleSwap}

@@ -301,3 +301,27 @@ export function obtenerDeudasMusculares() {
   const raw = localStorage.getItem(CLAVE_DEUDA_MUSCULAR)
   try { return raw ? JSON.parse(raw) : [] } catch { return [] }
 }
+
+export function calcularPesoTransferencia(ejercicioId, todosEjercicios, records) {
+  const ejercicio = todosEjercicios[ejercicioId]
+  if (!ejercicio || !ejercicio.ancla_id || !ejercicio.coeficiente) return null
+
+  const historialPropio = obtenerHistorialEjercicio(ejercicioId)
+  if (historialPropio.length > 0) return null
+
+  const prAncla = records[ejercicio.ancla_id]?.peso
+  if (!prAncla) return null
+
+  const pesoCalculado = prAncla * ejercicio.coeficiente * 0.92
+  const pesoRedondeado = Math.max(2.5, Math.round(pesoCalculado / 2.5) * 2.5)
+  const ancla = todosEjercicios[ejercicio.ancla_id]
+
+  return {
+    peso: pesoRedondeado,
+    anclaId: ejercicio.ancla_id,
+    anclaName: ancla?.nombre || '',
+    prAncla,
+    coeficiente: ejercicio.coeficiente,
+    esPrimerVez: true,
+  }
+}
