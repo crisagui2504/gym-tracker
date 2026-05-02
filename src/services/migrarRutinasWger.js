@@ -31,6 +31,38 @@ async function wgerPost(endpoint, payload, token) {
   return response.json()
 }
 
+// CACHÉ PARA NO SATURAR LA API CON PREGUNTAS REPETIDAS
+const cacheIdsReales = {}
+
+// FUNCIÓN INTELIGENTE PARA OBTENER EL ID DE LA TRADUCCIÓN
+async function obtenerIdReal(baseId) {
+  if (cacheIdsReales[baseId]) return cacheIdsReales[baseId]
+
+  try {
+    // Preguntamos a WGER por la traducción al español (language=21)
+    let res = await fetch(`${BASE_URL}/exercise/?exercise_base=${baseId}&language=21`)
+    let data = await res.json()
+
+    if (data.results && data.results.length > 0) {
+      cacheIdsReales[baseId] = data.results[0].id
+      return data.results[0].id
+    }
+
+    // Si no hay traducción en español, pedimos la de inglés o cualquiera
+    res = await fetch(`${BASE_URL}/exercise/?exercise_base=${baseId}`)
+    data = await res.json()
+
+    if (data.results && data.results.length > 0) {
+      cacheIdsReales[baseId] = data.results[0].id
+      return data.results[0].id
+    }
+  } catch (e) {
+    console.warn(`No se pudo obtener el ID real para la base ${baseId}`)
+  }
+
+  return baseId // Fallback de emergencia
+}
+
 export async function ejecutarMigracionRutinas(token, exerciseMap = WGER_EXERCISE_MAP) {
   if (!token?.trim()) {
     console.error('No se proporciono un token.')
@@ -69,12 +101,15 @@ export async function ejecutarMigracionRutinas(token, exerciseMap = WGER_EXERCIS
       const dayId = day.id
 
       for (const ej of rutina.ejercicios) {
-        const wgerExerciseId = exerciseMap[ej.ejercicio_id] || exerciseMap[String(ej.ejercicio_id)]
+        const wgerExerciseBaseId = exerciseMap[ej.ejercicio_id] || exerciseMap[String(ej.ejercicio_id)]
 
-        if (!wgerExerciseId) {
+        if (!wgerExerciseBaseId) {
           console.warn(`Omitiendo "${ej.nombre}" - No esta en el WGER_EXERCISE_MAP`)
           continue
         }
+
+        // --- EL PASO CLAVE: Traducir el ID Base al ID Real ---
+        const realExerciseId = await obtenerIdReal(wgerExerciseBaseId)
 
         const seriesInt = parseInt(ej.series_objetivo, 10) || 3
         const repsString = String(ej.reps_objetivo || '8')
@@ -87,11 +122,9 @@ export async function ejecutarMigracionRutinas(token, exerciseMap = WGER_EXERCIS
 
         const slotId = slotResponse.id
 
-        // ¡AQUÍ ESTÁ LA MAGIA FINAL! 
-        // Cambiamos "exercise" por "exercise_base"
         await wgerPost('/slot-entry/', {
             slot: slotId,
-            exercise_base: wgerExerciseId,
+            exercise: realExerciseId, // AHORA SÍ, LE PASAMOS EL ID CORRECTO
             reps: repsString
         }, token.trim())
 
