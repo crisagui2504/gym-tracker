@@ -2,7 +2,7 @@ import { RUTINAS_LOCALES } from './rutinasLocales'
 import { WGER_EXERCISE_MAP } from './migrarHistorialWger'
 
 const BASE_URL = 'https://wger.de/api/v2'
-const PAUSA_MS = 400
+const PAUSA_MS = 500
 
 function esperar(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms))
@@ -70,12 +70,22 @@ export async function ejecutarMigracionRutinas(token, exerciseMap = WGER_EXERCIS
         }
 
         const seriesInt = parseInt(ej.series_objetivo, 10) || 3
+        const repsString = String(ej.reps_objetivo || '8')
 
-        await wgerPost('/set/', {
+        // 1. Crear el Set (agrupador)
+        const setResponse = await wgerPost('/set/', {
           day: dayId,
-          exercise: wgerExerciseId,
           order: ej.orden,
-          sets: seriesInt,
+          sets: seriesInt, // WGER API v2 todavía usa 'sets' en el modelo Set
+        }, token.trim())
+
+        const setId = setResponse.id
+
+        // 2. Crear el Setting (donde va el ejercicio)
+        await wgerPost('/setting/', {
+            set: setId,
+            exercise: wgerExerciseId,
+            reps: repsString
         }, token.trim())
 
         console.log(`  - Ejercicio anadido: ${ej.nombre}`)
