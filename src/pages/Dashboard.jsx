@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { getEstadisticas } from '../services/api'
 import { obtenerHistorialEjercicio, obtenerRecords } from '../services/storage'
+import BotonMigracionWger from '../components/BotonMigracionWger'
 
 function extraerHistorialApi(payload) {
   if (!payload) return []
@@ -86,6 +87,8 @@ export default function Dashboard({ onVolver }) {
           <button onClick={onVolver} className="btn-secondary rounded-xl px-3 py-2 text-sm">Volver</button>
           <h2 className="text-2xl font-semibold">Mi progreso</h2>
         </div>
+
+        {import.meta.env.DEV && <BotonMigracionWger />}
 
         {!lista.length ? (
           <div className="rounded-xl border border-[var(--surface-container-highest)] bg-[var(--surface)] p-8 text-center">
