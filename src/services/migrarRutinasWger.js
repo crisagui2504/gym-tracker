@@ -19,14 +19,16 @@ async function wgerPost(endpoint, payload, token) {
     body: JSON.stringify(payload),
   })
 
+  // Manejo de errores corregido (evita el "body stream already read")
   if (!response.ok) {
-    let detalle = null
+    const errorText = await response.text()
+    let detalle = errorText
     try {
-      detalle = await response.json()
-    } catch {
-      detalle = await response.text()
+      detalle = JSON.parse(errorText)
+    } catch (e) {
+      // Si no es JSON, se queda como texto plano
     }
-    throw new Error(`Error en ${endpoint}: ${JSON.stringify(detalle)}`)
+    throw new Error(`Error en ${endpoint}: ${typeof detalle === 'object' ? JSON.stringify(detalle) : detalle}`)
   }
 
   return response.json()
@@ -42,7 +44,9 @@ export async function ejecutarMigracionRutinas(token, exerciseMap = WGER_EXERCIS
 
   try {
     console.log('Creando Entrenamiento maestro...')
-    const workout = await wgerPost('/workout/', {
+    
+    // ¡CORRECCIÓN!: El endpoint en WGER es /routine/
+    const workout = await wgerPost('/routine/', {
       name: 'Ciclo de 9 Dias (Migrado)',
       description: 'Rutina importada automaticamente desde la Web App',
     }, token.trim())
@@ -54,7 +58,7 @@ export async function ejecutarMigracionRutinas(token, exerciseMap = WGER_EXERCIS
       console.log(`Creando Dia para Rutina ${key}...`)
 
       const day = await wgerPost('/day/', {
-        training: workoutId,
+        training: workoutId, // En WGER, la llave foránea se llama "training"
         description: `Dia ${key}`,
         day: [],
       }, token.trim())
@@ -76,7 +80,7 @@ export async function ejecutarMigracionRutinas(token, exerciseMap = WGER_EXERCIS
         const setResponse = await wgerPost('/set/', {
           day: dayId,
           order: ej.orden,
-          sets: seriesInt, // WGER API v2 todavía usa 'sets' en el modelo Set
+          sets: seriesInt, 
         }, token.trim())
 
         const setId = setResponse.id
