@@ -1,10 +1,12 @@
 import { useMemo, useState } from 'react'
-import { ejecutarMigracionWger, resumirMigracionWger } from '../services/migrarHistorialWger'
+import { ejecutarMigracionWger, resumirMigracionWger, WGER_EXERCISE_MAP } from '../services/migrarHistorialWger'
+
+const MAPA_INICIAL = JSON.stringify(WGER_EXERCISE_MAP, null, 2)
 
 export default function BotonMigracionWger() {
   const [token, setToken] = useState('')
   const [dryRun, setDryRun] = useState(true)
-  const [mapaTexto, setMapaTexto] = useState('{\n  "1": 192\n}')
+  const [mapaTexto, setMapaTexto] = useState(MAPA_INICIAL)
   const [estado, setEstado] = useState('listo')
   const [mensaje, setMensaje] = useState('')
   const [progreso, setProgreso] = useState(null)

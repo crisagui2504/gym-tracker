@@ -4,13 +4,37 @@ import { obtenerHistorialTodos } from './storage'
 const BASE_URL = 'https://wger.de/api/v2'
 const PAUSA_MS = 500
 
-// Completa este mapa con los IDs reales de WGER antes de ejecutar una migracion real.
-// Formato recomendado: ID local de tu app -> ID de ejercicio en WGER.
+// Mapa base: ID local de tu app -> ID de ejercicio en WGER.
 export const WGER_EXERCISE_MAP = {
-  // 1: 192,  // Press de Banca con Barra
-  // 13: 111, // Sentadilla Libre con Barra
-  // 14: 105, // Peso Muerto Rumano con Barra
-  // 11: 88,  // Curl de Biceps con Barra
+  1: 192,
+  2: 206,
+  3: 179,
+  4: 157,
+  5: 84,
+  6: 84,
+  7: 181,
+  8: 109,
+  9: 70,
+  10: 116,
+  11: 129,
+  12: 86,
+  13: 111,
+  14: 105,
+  15: 88,
+  16: 138,
+  17: 83,
+  18: 150,
+  19: 179,
+  20: 83,
+  21: 192,
+  22: 157,
+  23: 84,
+  24: 106,
+  25: 181,
+  26: 109,
+  27: 150,
+  28: 81,
+  29: 129,
 }
 
 function esperar(ms) {
