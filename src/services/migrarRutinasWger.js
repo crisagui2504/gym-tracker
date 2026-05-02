@@ -79,7 +79,6 @@ export async function ejecutarMigracionRutinas(token, exerciseMap = WGER_EXERCIS
         const seriesInt = parseInt(ej.series_objetivo, 10) || 3
         const repsString = String(ej.reps_objetivo || '8')
 
-        // ¡CORRECCIÓN AQUÍ! WGER ahora usa /slot/ en lugar de /set/
         const slotResponse = await wgerPost('/slot/', {
           day: dayId,
           order: ej.orden,
@@ -88,10 +87,11 @@ export async function ejecutarMigracionRutinas(token, exerciseMap = WGER_EXERCIS
 
         const slotId = slotResponse.id
 
-        // ¡CORRECCIÓN AQUÍ! WGER ahora usa /slot-entry/ en lugar de /setting/
+        // ¡AQUÍ ESTÁ LA MAGIA FINAL! 
+        // Cambiamos "exercise" por "exercise_base"
         await wgerPost('/slot-entry/', {
             slot: slotId,
-            exercise: wgerExerciseId,
+            exercise_base: wgerExerciseId,
             reps: repsString
         }, token.trim())
 
