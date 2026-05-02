@@ -42,13 +42,11 @@ export async function ejecutarMigracionRutinas(token, exerciseMap = WGER_EXERCIS
   try {
     console.log('Creando Entrenamiento maestro...')
     
-    // 1. Generamos fechas obligatorias para WGER (Inicia hoy, termina en 1 año)
     const hoy = new Date()
     const fechaInicio = hoy.toISOString().split('T')[0]
-    hoy.setFullYear(hoy.getFullYear() + 1) // Le sumamos un año al fin
+    hoy.setFullYear(hoy.getFullYear() + 1) 
     const fechaFin = hoy.toISOString().split('T')[0]
 
-    // 2. Enviamos la rutina con start y end
     const workout = await wgerPost('/routine/', {
       name: 'Ciclo de 9 Dias (Migrado)',
       description: 'Rutina importada automaticamente desde la Web App',
@@ -63,7 +61,7 @@ export async function ejecutarMigracionRutinas(token, exerciseMap = WGER_EXERCIS
       console.log(`Creando Dia para Rutina ${key}...`)
 
       const day = await wgerPost('/day/', {
-        training: workoutId,
+        routine: workoutId, // <--- AQUÍ ESTÁ LA CORRECCIÓN MÁGICA
         description: `Dia ${key}`,
         day: [],
       }, token.trim())
