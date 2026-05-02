@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { ejecutarMigracionWger, resumirMigracionWger, WGER_EXERCISE_MAP } from '../services/migrarHistorialWger'
+import { ejecutarMigracionRutinas } from '../services/migrarRutinasWger'
 
 const MAPA_INICIAL = JSON.stringify(WGER_EXERCISE_MAP, null, 2)
 
@@ -8,7 +9,9 @@ export default function BotonMigracionWger() {
   const [dryRun, setDryRun] = useState(true)
   const [mapaTexto, setMapaTexto] = useState(MAPA_INICIAL)
   const [estado, setEstado] = useState('listo')
+  const [estadoRutinas, setEstadoRutinas] = useState('listo')
   const [mensaje, setMensaje] = useState('')
+  const [mensajeRutinas, setMensajeRutinas] = useState('')
   const [progreso, setProgreso] = useState(null)
   const mapaParseado = useMemo(() => {
     try {
@@ -42,6 +45,24 @@ export default function BotonMigracionWger() {
     } catch (error) {
       setEstado('error')
       setMensaje(error.message)
+    }
+  }
+
+  const migrarRutinas = async () => {
+    setEstadoRutinas('ejecutando')
+    setMensajeRutinas('Creando entrenamiento y dias en WGER...')
+
+    try {
+      const ok = await ejecutarMigracionRutinas(token, mapaParseado || {})
+      setEstadoRutinas(ok ? 'listo' : 'error')
+      setMensajeRutinas(
+        ok
+          ? 'Rutinas migradas. Revisa WGER o la consola para ver el detalle.'
+          : 'No se pudieron migrar las rutinas. Revisa la consola.'
+      )
+    } catch (error) {
+      setEstadoRutinas('error')
+      setMensajeRutinas(error.message)
     }
   }
 
@@ -116,6 +137,15 @@ export default function BotonMigracionWger() {
         {estado === 'ejecutando' ? 'Migrando...' : dryRun ? 'Probar migracion' : 'Migrar a WGER'}
       </button>
 
+      <button
+        type="button"
+        disabled={estadoRutinas === 'ejecutando' || mapaParseado === null || !token.trim()}
+        onClick={migrarRutinas}
+        className="mt-2 w-full rounded-xl bg-blue-600 px-4 py-3 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-45"
+      >
+        {estadoRutinas === 'ejecutando' ? 'Migrando rutinas...' : 'Migrar Rutinas a WGER'}
+      </button>
+
       {progreso && (
         <p className="mt-2 text-xs text-[#925448]">
           {progreso.actual}/{progreso.total}: {progreso.log.nombre}
@@ -125,6 +155,12 @@ export default function BotonMigracionWger() {
       {mensaje && (
         <p className={`mt-2 text-xs ${estado === 'error' ? 'text-[#a32018]' : 'text-[#743126]'}`}>
           {mensaje}
+        </p>
+      )}
+
+      {mensajeRutinas && (
+        <p className={`mt-2 text-xs ${estadoRutinas === 'error' ? 'text-[#a32018]' : 'text-[#1d4f91]'}`}>
+          {mensajeRutinas}
         </p>
       )}
 
