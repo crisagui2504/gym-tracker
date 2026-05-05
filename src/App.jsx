@@ -13,7 +13,14 @@ import {
   registrarDeudaMuscular,
   saldarDeudaMuscular,
 } from './services/storage'
-import { guardarEntrenamiento, actualizarRachaServidor } from './services/api'
+import {
+  getDatosUsuario,
+  guardarEntrenamiento,
+  actualizarRachaServidor,
+  guardarRecord,
+  guardarHistorialEjercicioServidor,
+  guardarCicloRutinas,
+} from './services/api'
 
 function App() {
   const [pantalla, setPantalla] = useState('seleccion')
@@ -21,11 +28,18 @@ function App() {
   const [estadoInicialEntrenamiento, setEstadoInicialEntrenamiento] = useState(null)
   const [sesionPausada, setSesionPausada] = useState(null)
   const [estadoCicloRutinas, setEstadoCicloRutinas] = useState({ nextRutinaId: 1, completadasHoy: [] })
+  const [recordsMap, setRecordsMap] = useState({})
 
   useEffect(() => {
     const sesion = obtenerSesionActiva()
     if (sesion) setSesionPausada(sesion)
-    setEstadoCicloRutinas(obtenerEstadoCicloRutinas())
+
+    // Cargar datos sincronizados desde el servidor
+    getDatosUsuario().then(data => {
+      if (!data) return
+      if (data.records) setRecordsMap(data.records)
+      if (data.ciclo) setEstadoCicloRutinas(data.ciclo)
+    })
   }, [])
 
   const handleSeleccionar = (rutina) => {
@@ -49,7 +63,7 @@ function App() {
     setSesionPausada(null)
   }
 
-  const handleFinalizar = async (seriesGuardadas) => {
+  const handleFinalizar = async (seriesGuardadas, nuevosPRs = []) => {
     const gruposCompletados = new Set()
     Object.keys(seriesGuardadas).forEach(ejercicioId => {
       const ej = rutinaActiva.ejercicios?.find(e => e.ejercicio_id === parseInt(ejercicioId))
@@ -64,6 +78,12 @@ function App() {
       }
     })
     await actualizarRachaServidor()
+
+    // Guardar PRs en servidor
+    for (const pr of nuevosPRs) {
+      await guardarRecord(pr.ejercicioId, pr.nombre, pr.peso)
+    }
+
     const resultado = await guardarEntrenamiento(rutinaActiva.id, seriesGuardadas)
     if (resultado.offline) {
       guardarLocal({ rutina_id: rutinaActiva.id, series: seriesGuardadas })
@@ -72,8 +92,16 @@ function App() {
       limpiarLocal()
       alert('Entrenamiento guardado.')
     }
-    const nuevoEstadoCiclo = marcarRutinaCompletada(rutinaActiva.id)
-    setEstadoCicloRutinas(nuevoEstadoCiclo)
+
+    const nuevoCiclo = {
+      nextRutinaId: calcularSiguienteRutina(rutinaActiva.id),
+      completadasHoy: [...(estadoCicloRutinas.completadasHoy || []), rutinaActiva.id],
+      ultimaFecha: new Date().toISOString().split('T')[0],
+      ultimaRutinaId: rutinaActiva.id,
+    }
+    setEstadoCicloRutinas(nuevoCiclo)
+    await guardarCicloRutinas(nuevoCiclo)
+
     limpiarSesionActiva()
     setPantalla('seleccion')
     setRutinaActiva(null)
@@ -114,11 +142,18 @@ function App() {
           onFinalizar={handleFinalizar}
           onEstadoChange={handleEstadoEntrenamiento}
           estadoInicial={estadoInicialEntrenamiento}
+          recordsMapInicial={recordsMap}
         />
       )}
       {pantalla === 'dashboard' && <Dashboard onVolver={() => setPantalla('seleccion')} />}
     </div>
   )
+}
+
+function calcularSiguienteRutina(rutinaId) {
+  const orden = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+  const idx = orden.indexOf(rutinaId)
+  return orden[(idx + 1) % orden.length]
 }
 
 export default App

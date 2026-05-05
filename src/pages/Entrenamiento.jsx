@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { getRutina } from '../services/api'
+import { getRutina, guardarHistorialEjercicioServidor } from '../services/api'
 import { TODOS_EJERCICIOS } from '../services/rutinasLocales'
 import { actualizarRecord, esNuevoRecord, obtenerRecords, guardarRegistroHistorial, calcularSugerenciaProgresion, calcularPesoTransferencia } from '../services/storage'
 import ConfettiPR from '../components/ConfettiPR'
@@ -258,13 +258,14 @@ function TarjetaEjercicio({ ejercicio, unidad, recordsMap, onSeriesCompletas, ej
   )
 }
 
-export default function Entrenamiento({ rutina, onVolver, onFinalizar, onEstadoChange, estadoInicial }) {
+export default function Entrenamiento({ rutina, onVolver, onFinalizar, onEstadoChange, estadoInicial, recordsMapInicial, onNuevoPR }) {
   const [unidad, setUnidad] = useState(estadoInicial?.unidad || 'kg')
   const [seriesGuardadas, setSeriesGuardadas] = useState(estadoInicial?.seriesGuardadas || {})
   const [cargando, setCargando] = useState(true)
   const [ejercicios, setEjercicios] = useState([])
   const [prDetectado, setPrDetectado] = useState(null)
-  const [recordsMap, setRecordsMap] = useState({})
+  const [recordsMap, setRecordsMap] = useState(recordsMapInicial || {})
+  const nuevosPRsRef = useRef([])
 
   useEffect(() => {
     async function cargar() {
@@ -293,12 +294,19 @@ export default function Entrenamiento({ rutina, onVolver, onFinalizar, onEstadoC
     setSeriesGuardadas((prev) => ({ ...prev, [ejercicioId]: series }))
     const mejorSerie = series.reduce((max, s) => (s.peso_kg > max.peso_kg ? s : max), series[0])
     guardarRegistroHistorial({ ejercicioId, nombreEjercicio, pesoKg: mejorSerie.peso_kg, repeticiones: mejorSerie.repeticiones })
+
+    guardarHistorialEjercicioServidor(
+      ejercicioId, nombreEjercicio,
+      mejorSerie.peso_kg, mejorSerie.repeticiones
+    )
+
     if (esNuevoRecord(ejercicioId, mejorSerie.peso_kg)) {
       actualizarRecord(ejercicioId, nombreEjercicio, mejorSerie.peso_kg)
       setRecordsMap(obtenerRecords())
       setPrDetectado({ nombre: nombreEjercicio, peso: mejorSerie.peso_kg })
+      onNuevoPR?.({ ejercicioId, nombre: nombreEjercicio, peso: mejorSerie.peso_kg })
     }
-  }, [])
+  }, [onNuevoPR])
 
   const handleSwap = useCallback((ejercicioActual, alternativa, posicionDuplicado) => {
     setEjercicios(prev => {
@@ -358,7 +366,7 @@ export default function Entrenamiento({ rutina, onVolver, onFinalizar, onEstadoC
 
         {completados > 0 && (
           <div className="sticky bottom-[calc(env(safe-area-inset-bottom)+0.5rem)] pt-2">
-            <button onClick={() => onFinalizar(seriesGuardadas)} className="btn-primary w-full rounded-xl px-5 py-4 text-sm">
+            <button onClick={() => onFinalizar(seriesGuardadas, nuevosPRsRef.current)} className="btn-primary w-full rounded-xl px-5 py-4 text-sm">
               Finalizar entrenamiento
             </button>
           </div>

@@ -57,3 +57,54 @@ export async function actualizarRachaServidor() {
     return null
   }
 }
+
+export async function getDatosUsuario() {
+  try {
+    const res = await fetch(`${BASE_URL}/obtener_datos_usuario.php`)
+    if (!res.ok) throw new Error()
+    return await res.json()
+  } catch {
+    return null
+  }
+}
+
+export async function guardarRecord(ejercicioId, nombreEjercicio, pesoKg) {
+  try {
+    await fetch(`${BASE_URL}/guardar_record.php`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        ejercicio_id: ejercicioId,
+        nombre_ejercicio: nombreEjercicio,
+        peso_kg: pesoKg,
+        fecha: new Date().toISOString().split('T')[0]
+      })
+    })
+  } catch { }
+}
+
+export async function guardarHistorialEjercicioServidor(ejercicioId, nombreEjercicio, pesoKg, repeticiones) {
+  try {
+    await fetch(`${BASE_URL}/guardar_historial_ejercicio.php`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        ejercicio_id: ejercicioId,
+        nombre_ejercicio: nombreEjercicio,
+        peso_kg: pesoKg,
+        repeticiones,
+        fecha: new Date().toISOString()
+      })
+    })
+  } catch { }
+}
+
+export async function guardarCicloRutinas(ciclo) {
+  try {
+    await fetch(`${BASE_URL}/guardar_ciclo_rutinas.php`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(ciclo)
+    })
+  } catch { }
+}
