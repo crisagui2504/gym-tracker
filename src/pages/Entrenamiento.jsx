@@ -143,10 +143,6 @@ function TarjetaEjercicio({ ejercicio, unidad, recordsMap, onSeriesCompletas, ej
   const [modalAbierto, setModalAbierto] = useState(false)
   const [ejercicioActual, setEjercicioActual] = useState(ejercicio)
 
-  const maxSeries = parseInt(
-    ejercicioActual.series_objetivo?.includes('-') ? ejercicioActual.series_objetivo.split('-')[1] : ejercicioActual.series_objetivo || '3',
-    10,
-  )
   const numSeriesMin = parseInt(
     ejercicioActual.series_objetivo?.includes('-') ? ejercicioActual.series_objetivo.split('-')[0] : ejercicioActual.series_objetivo || '3',
     10,
@@ -264,7 +260,7 @@ export default function Entrenamiento({ rutina, onVolver, onFinalizar, onEstadoC
   const [cargando, setCargando] = useState(true)
   const [ejercicios, setEjercicios] = useState([])
   const [prDetectado, setPrDetectado] = useState(null)
-  const [recordsMap, setRecordsMap] = useState(recordsMapInicial || {})
+  const [recordsMap, setRecordsMap] = useState(() => recordsMapInicial || obtenerRecords())
   const nuevosPRsRef = useRef([])
 
   useEffect(() => {
@@ -285,10 +281,6 @@ export default function Entrenamiento({ rutina, onVolver, onFinalizar, onEstadoC
     if (!onEstadoChange) return
     onEstadoChange({ unidad, seriesGuardadas })
   }, [unidad, seriesGuardadas, onEstadoChange])
-
-  useEffect(() => {
-    setRecordsMap(obtenerRecords())
-  }, [])
 
   const handleSeriesCompletas = useCallback((ejercicioId, nombreEjercicio, series) => {
     setSeriesGuardadas((prev) => ({ ...prev, [ejercicioId]: series }))

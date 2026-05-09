@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { obtenerRecords } from '../services/storage'
 
 const CALENTAMIENTOS = {
@@ -218,7 +218,7 @@ function SeriesEspecificas({ ejercicio, pr }) {
 export default function CalentamientoPrevio({ tipo, ejercicios = [] }) {
   const [abierto, setAbierto] = useState(false)
   const [completados, setCompletados] = useState(new Set())
-  const records = obtenerRecords()
+  const records = useMemo(() => obtenerRecords(), [])
 
   const calentamiento = CALENTAMIENTOS[tipo]
   if (!calentamiento) return null

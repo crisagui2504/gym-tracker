@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import SeleccionRutina from './pages/SeleccionRutina'
 import Entrenamiento from './pages/Entrenamiento'
 import Dashboard from './pages/Dashboard'
@@ -42,28 +42,28 @@ function App() {
     })
   }, [])
 
-  const handleSeleccionar = (rutina) => {
+  const handleSeleccionar = useCallback((rutina) => {
     const base = { rutina, unidad: 'kg', seriesGuardadas: {} }
     guardarSesionActiva(base)
     setRutinaActiva(rutina)
     setEstadoInicialEntrenamiento(base)
     setPantalla('entrenamiento')
     setSesionPausada(null)
-  }
+  }, [])
 
-  const handleReanudar = () => {
+  const handleReanudar = useCallback(() => {
     if (!sesionPausada) return
     setRutinaActiva(sesionPausada.rutina)
     setEstadoInicialEntrenamiento(sesionPausada)
     setPantalla('entrenamiento')
-  }
+  }, [sesionPausada])
 
-  const handleDescartarSesion = () => {
+  const handleDescartarSesion = useCallback(() => {
     limpiarSesionActiva()
     setSesionPausada(null)
-  }
+  }, [])
 
-  const handleFinalizar = async (seriesGuardadas, nuevosPRs = []) => {
+  const handleFinalizar = useCallback(async (seriesGuardadas, nuevosPRs = []) => {
     const gruposCompletados = new Set()
     Object.keys(seriesGuardadas).forEach(ejercicioId => {
       const ej = rutinaActiva.ejercicios?.find(e => e.ejercicio_id === parseInt(ejercicioId))
@@ -107,21 +107,21 @@ function App() {
     setRutinaActiva(null)
     setEstadoInicialEntrenamiento(null)
     setSesionPausada(null)
-  }
+  }, [rutinaActiva, estadoCicloRutinas])
 
-  const handleEstadoEntrenamiento = (estado) => {
+  const handleEstadoEntrenamiento = useCallback((estado) => {
     if (!rutinaActiva) return
     guardarSesionActiva({
       rutina: rutinaActiva,
       unidad: estado.unidad,
       seriesGuardadas: estado.seriesGuardadas,
     })
-  }
+  }, [rutinaActiva])
 
-  const handleVolverDesdeEntrenamiento = () => {
+  const handleVolverDesdeEntrenamiento = useCallback(() => {
     setPantalla('seleccion')
     setSesionPausada(obtenerSesionActiva())
-  }
+  }, [])
 
   return (
     <div className="app-shell">

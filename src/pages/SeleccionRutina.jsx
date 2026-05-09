@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { getRachaServidor } from '../services/api'
 import { obtenerDeudasMusculares } from '../services/storage'
 
@@ -158,15 +158,18 @@ export default function SeleccionRutina({
     weekday: 'long', day: 'numeric', month: 'long',
   })
 
-  const porTipo = {
+  const porTipo = useMemo(() => ({
     push: RUTINAS.filter((r) => r.tipo === 'push'),
     pull: RUTINAS.filter((r) => r.tipo === 'pull'),
     leg: RUTINAS.filter((r) => r.tipo === 'leg'),
-  }
+  }), [])
 
   const completadasHoy = estadoCicloRutinas?.completadasHoy || []
   const siguienteId = estadoCicloRutinas?.nextRutinaId
-  const siguienteRutina = RUTINAS.find((r) => r.id === siguienteId)
+  const siguienteRutina = useMemo(
+    () => RUTINAS.find((r) => r.id === siguienteId),
+    [siguienteId]
+  )
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-lg flex-col gap-5 pb-24 pt-6">

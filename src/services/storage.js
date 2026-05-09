@@ -6,6 +6,9 @@ const CLAVE_CICLO_RUTINAS = 'gym_ciclo_rutinas'
 const CLAVE_DEUDA_MUSCULAR = 'gym_deuda_muscular'
 const ORDEN_CICLO_RUTINAS = [1, 2, 3, 4, 5, 6, 7, 8, 9]
 
+let _cacheHistorial = null
+let _cacheRecords = null
+
 function fechaLocalISO() {
   const ahora = new Date()
   const y = ahora.getFullYear()
@@ -56,12 +59,15 @@ export function limpiarSesionActiva() {
 }
 
 export function guardarRecords(records) {
+  _cacheRecords = records
   localStorage.setItem(CLAVE_RECORDS, JSON.stringify(records))
 }
 
 export function obtenerRecords() {
+  if (_cacheRecords !== null) return _cacheRecords
   const records = localStorage.getItem(CLAVE_RECORDS)
-  return records ? JSON.parse(records) : {}
+  _cacheRecords = records ? JSON.parse(records) : {}
+  return _cacheRecords
 }
 
 export function obtenerRacha() {
@@ -119,6 +125,11 @@ export function esNuevoRecord(ejercicioId, pesoKg) {
   return !recordActual || pesoKg > recordActual.peso
 }
 
+function _guardarHistorialTodos(historial) {
+  _cacheHistorial = historial
+  localStorage.setItem(CLAVE_HISTORIAL, JSON.stringify(historial))
+}
+
 export function guardarRegistroHistorial({ ejercicioId, nombreEjercicio, pesoKg, repeticiones }) {
   if (!ejercicioId || !pesoKg) return
   const historial = obtenerHistorialTodos()
@@ -132,18 +143,18 @@ export function guardarRegistroHistorial({ ejercicioId, nombreEjercicio, pesoKg,
     fecha: new Date().toISOString(),
   })
   historial[clave] = actual
-  localStorage.setItem(CLAVE_HISTORIAL, JSON.stringify(historial))
+  _guardarHistorialTodos(historial)
 }
 
 export function obtenerHistorialTodos() {
+  if (_cacheHistorial !== null) return _cacheHistorial
   const data = localStorage.getItem(CLAVE_HISTORIAL)
-  if (!data) return {}
+  if (!data) { _cacheHistorial = {}; return _cacheHistorial }
   try {
     const parsed = JSON.parse(data)
-    return parsed && typeof parsed === 'object' ? parsed : {}
-  } catch {
-    return {}
-  }
+    _cacheHistorial = parsed && typeof parsed === 'object' ? parsed : {}
+  } catch { _cacheHistorial = {} }
+  return _cacheHistorial
 }
 
 export function obtenerHistorialEjercicio(ejercicioId) {

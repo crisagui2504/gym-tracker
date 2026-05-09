@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
-import { getEstadisticas } from '../services/api'
+import { getEstadisticas, guardarRecord } from '../services/api'
 import { obtenerHistorialEjercicio, obtenerRecords } from '../services/storage'
 import BotonMigracionWger from '../components/BotonMigracionWger'
 
@@ -48,6 +48,38 @@ export default function Dashboard({ onVolver }) {
   const [records, setRecords] = useState({})
   const [seleccionado, setSeleccionado] = useState(null)
   const [progresoSemanal, setProgresoSemanal] = useState([])
+  const [migrando, setMigrando] = useState(false)
+
+  // --- ESTADO Y FUNCIÓN PARA EL BOTÓN TEMPORAL DE MIGRACIÓN ---
+  const handleMigrarRecords = async () => {
+    setMigrando(true)
+
+    // 1. Extraemos los records del localStorage
+    const raw = localStorage.getItem('gym_records_personales')
+    const recordsLocales = raw ? JSON.parse(raw) : {}
+    const recordsArr = Object.values(recordsLocales)
+
+    // 2. Validamos si hay récords para subir
+    if (recordsArr.length === 0) {
+      alert('No hay récords locales guardados en este dispositivo.')
+      setMigrando(false)
+      return
+    }
+
+    // 3. Subimos uno por uno al servidor
+    try {
+      for (const pr of recordsArr) {
+        await guardarRecord(pr.ejercicio_id, pr.nombre, pr.peso)
+      }
+      alert(`¡Éxito! Se han subido ${recordsArr.length} récords al servidor.`)
+    } catch (error) {
+      console.error(error)
+      alert('Hubo un error al migrar los récords. Revisa la consola.')
+    }
+
+    setMigrando(false)
+  }
+  // -----------------------------------------------------------
 
   useEffect(() => {
     const r = obtenerRecords()
@@ -56,18 +88,20 @@ export default function Dashboard({ onVolver }) {
     if (primero) setSeleccionado(primero)
   }, [])
 
+  const selectedId = seleccionado?.ejercicio_id ?? null
+
   useEffect(() => {
     let mounted = true
     async function run() {
-      if (!seleccionado?.ejercicio_id) return
+      if (!selectedId) return
       let historial = []
       try {
-        const api = await getEstadisticas(seleccionado.ejercicio_id)
+        const api = await getEstadisticas(selectedId)
         historial = extraerHistorialApi(api)
       } catch {
         historial = []
       }
-      if (!historial.length) historial = obtenerHistorialEjercicio(seleccionado.ejercicio_id)
+      if (!historial.length) historial = obtenerHistorialEjercicio(selectedId)
       const semanal = agruparSemanal(historial)
       if (mounted) {
         if (semanal.length === 0 && seleccionado?.peso) setProgresoSemanal([{ fecha: 'Actual', peso: seleccionado.peso, sortKey: 'z' }])
@@ -76,7 +110,7 @@ export default function Dashboard({ onVolver }) {
     }
     run()
     return () => { mounted = false }
-  }, [seleccionado])
+  }, [selectedId])
 
   const lista = Object.values(records)
 
@@ -89,6 +123,16 @@ export default function Dashboard({ onVolver }) {
         </div>
 
         <BotonMigracionWger />
+
+        {/* --- BOTÓN TEMPORAL DE MIGRACIÓN --- */}
+        <button
+          onClick={handleMigrarRecords}
+          disabled={migrando}
+          className="btn-primary w-full mb-4 rounded-xl bg-blue-600 px-4 py-3 font-semibold text-white transition disabled:opacity-50"
+        >
+          {migrando ? 'Subiendo récords al servidor...' : '⚠️ Respaldar Récords en la Base de Datos'}
+        </button>
+        {/* ----------------------------------- */}
 
         {!lista.length ? (
           <div className="rounded-xl border border-[var(--surface-container-highest)] bg-[var(--surface)] p-8 text-center">
