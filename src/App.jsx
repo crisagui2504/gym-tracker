@@ -9,7 +9,6 @@ import {
   obtenerSesionActiva,
   limpiarSesionActiva,
   obtenerEstadoCicloRutinas,
-  marcarRutinaCompletada,
   registrarDeudaMuscular,
   saldarDeudaMuscular,
 } from './services/storage'
@@ -18,7 +17,6 @@ import {
   guardarEntrenamiento,
   actualizarRachaServidor,
   guardarRecord,
-  guardarHistorialEjercicioServidor,
   guardarCicloRutinas,
 } from './services/api'
 
@@ -33,6 +31,7 @@ function App() {
   useEffect(() => {
     const sesion = obtenerSesionActiva()
     if (sesion) setSesionPausada(sesion)
+    setEstadoCicloRutinas(obtenerEstadoCicloRutinas())
 
     // Cargar datos sincronizados desde el servidor
     getDatosUsuario().then(data => {

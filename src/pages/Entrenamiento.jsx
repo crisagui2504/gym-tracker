@@ -264,6 +264,10 @@ export default function Entrenamiento({ rutina, onVolver, onFinalizar, onEstadoC
   const nuevosPRsRef = useRef([])
 
   useEffect(() => {
+    if (recordsMapInicial) setRecordsMap(recordsMapInicial)
+  }, [recordsMapInicial])
+
+  useEffect(() => {
     async function cargar() {
       try {
         const data = await getRutina(rutina.id)
@@ -282,6 +286,11 @@ export default function Entrenamiento({ rutina, onVolver, onFinalizar, onEstadoC
     onEstadoChange({ unidad, seriesGuardadas })
   }, [unidad, seriesGuardadas, onEstadoChange])
 
+  const registrarNuevoPR = useCallback((pr) => {
+    nuevosPRsRef.current.push(pr)
+    onNuevoPR?.(pr)
+  }, [onNuevoPR])
+
   const handleSeriesCompletas = useCallback((ejercicioId, nombreEjercicio, series) => {
     setSeriesGuardadas((prev) => ({ ...prev, [ejercicioId]: series }))
     const mejorSerie = series.reduce((max, s) => (s.peso_kg > max.peso_kg ? s : max), series[0])
@@ -296,9 +305,9 @@ export default function Entrenamiento({ rutina, onVolver, onFinalizar, onEstadoC
       actualizarRecord(ejercicioId, nombreEjercicio, mejorSerie.peso_kg)
       setRecordsMap(obtenerRecords())
       setPrDetectado({ nombre: nombreEjercicio, peso: mejorSerie.peso_kg })
-      onNuevoPR?.({ ejercicioId, nombre: nombreEjercicio, peso: mejorSerie.peso_kg })
+      registrarNuevoPR({ ejercicioId, nombre: nombreEjercicio, peso: mejorSerie.peso_kg })
     }
-  }, [onNuevoPR])
+  }, [registrarNuevoPR])
 
   const handleSwap = useCallback((ejercicioActual, alternativa, posicionDuplicado) => {
     setEjercicios(prev => {
